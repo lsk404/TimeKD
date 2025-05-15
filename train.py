@@ -19,6 +19,7 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:150"
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--device", type=str, default="cuda:6", help="")
+    parser.add_argument("--root_path", type=str, default="./data/", help="data root path")
     parser.add_argument("--data_path", type=str, default="ETTh1", help="data path")
     parser.add_argument("--channel", type=int, default=512, help="number of features")
     parser.add_argument("--num_nodes", type=int, default=7, help="number of nodes")
@@ -132,10 +133,16 @@ def load_data(args):
         'ETTm1': Dataset_ETT_minute,
         'ETTm2': Dataset_ETT_minute
         }
-    data_class = data_map.get(args.data_path, Dataset_Custom)
-    train_set = data_class(flag='train', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path)
-    val_set = data_class(flag='val', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path)
-    test_set = data_class(flag='test', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path)
+    # data_class = data_map.get(args.data_path, Dataset_Custom)
+    if("ETTh1" in args.data_path or "ETTh2" in args.data_path):
+        data_class = Dataset_ETT_hour
+    elif ("ETTm1" in args.data_path or "ETTm2" in args.data_path):
+        data_class = Dataset_ETT_minute
+    else :
+        data_class = Dataset_Custom
+    train_set = data_class(flag='train', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
+    val_set = data_class(flag='val', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
+    test_set = data_class(flag='test', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
     
     scaler = train_set.scaler
 

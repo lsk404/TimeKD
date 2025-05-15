@@ -11,7 +11,9 @@ e_layers=(2)
 dropout_ns=(0.5)
 batch_sizes=(16)
 model_name="gpt2"
-data_path="ETTh1"
+# data_path="$HOME/autodl-tmp/all_datasets/ETT-small"
+data_root = "D:/0file/projs/UniTS/dataset/ETT-small/"
+data_path = "ETTh1"
 epochs=(100)
 
 for seq_len in "${seq_lens[@]}"; do 
@@ -25,8 +27,9 @@ for seq_len in "${seq_lens[@]}"; do
               mkdir -p $log_path
               log_file="${log_path}i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}.log"
               nohup python train.py \
+                --root_path $root_path \
                 --data_path $data_path \
-                --device cuda:7 \
+                --device cuda:0 \
                 --batch_size $batch_size \
                 --num_nodes 7 \
                 --seq_len $seq_len \
@@ -40,7 +43,7 @@ for seq_len in "${seq_lens[@]}"; do
                 --e_layer $e_layer\
                 --model_name $model_name \
                 --num_workers 10 \
-                --d_llm $d_llm > $log_file &
+                --d_llm $d_llm 2>&1 | tee -a $log_file &
             done
           done
         done
