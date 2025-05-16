@@ -10,10 +10,12 @@ d_llm=(768)
 e_layers=(2)
 dropout_ns=(0.5)
 batch_sizes=(16)
-model_name="gpt2"
+# model_name="gpt2"
+model_path="gpt2"
+tokenizer_path="gpt2"
 # data_path="$HOME/autodl-tmp/all_datasets/ETT-small"
-data_root = "D:/0file/projs/UniTS/dataset/ETT-small/"
-data_path = "ETTh1"
+data_root="D:/0file/projs/UniTS/dataset/ETT-small/"
+data_path="ETTh1" 
 epochs=(100)
 
 for seq_len in "${seq_lens[@]}"; do 
@@ -41,7 +43,8 @@ for seq_len in "${seq_lens[@]}"; do
                 --lrate $learning_rate \
                 --dropout_n $dropout_n \
                 --e_layer $e_layer\
-                --model_name $model_name \
+                --model_path $model_path \
+                --tokenizer_path $tokenizer_path \
                 --num_workers 10 \
                 --d_llm $d_llm 2>&1 | tee -a $log_file &
             done

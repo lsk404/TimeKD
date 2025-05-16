@@ -8,17 +8,19 @@ data_paths=(
   # "$HOME/autodl-tmp/all_datasets/Heartbeat"
   # "$HOME/autodl-tmp/all_datasets/traffic"
   "ETTh1"
-  "ETTh2"
-  "ETTm1"
-  "ETTm2"
+  # "ETTh2"
+  # "ETTm1"
+  # "ETTm2"
 )
 
-divides=("train" "val") 
+divides=("train" "val" "test") 
 device="cuda:0"
 num_nodes=7
 input_len=96
 output_len_values=(24 36 48 96 192)
-model_name=("gpt2")
+# model_name=("gpt2")
+model_path="gpt2"
+tokenizer_path="gpt2"
 d_model=768
 l_layer=12
 
@@ -34,7 +36,8 @@ for data_path in "${data_paths[@]}"; do
         --num_nodes $num_nodes \
         --input_len $input_len \
         --output_len $output_len \
-        --model_name $model_name \
+        --model_path $model_path \
+        --tokenizer_path $tokenizer_path \
         --d_model $d_model \
         --l_layer $l_layer 2>&1 | tee $log_file
     done

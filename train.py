@@ -20,7 +20,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--device", type=str, default="cuda:6", help="")
     parser.add_argument("--root_path", type=str, default="./data/", help="data root path")
-    parser.add_argument("--data_path", type=str, default="ETTh1", help="data path")
+    parser.add_argument("--data_path", type=str, default="ETTh1", help="just a data Name:ETTm1,ETTh1,ETTm2,ETTh2,not a path")
     parser.add_argument("--channel", type=int, default=512, help="number of features")
     parser.add_argument("--num_nodes", type=int, default=7, help="number of nodes")
     parser.add_argument("--seq_len", type=int, default=96, help="seq_len")
@@ -31,7 +31,8 @@ def parse_args():
     parser.add_argument("--d_llm", type=int, default=768, help="hidden dimensions")
     parser.add_argument("--e_layer", type=int, default=1, help="layers of transformer encoder")
     parser.add_argument("--head", type=int, default=8, help="heads of attention")
-    parser.add_argument("--model_name", type=str, default="gpt2", help="llm")
+    parser.add_argument("--model_path", type=str, default="gpt2", help="llm model path")
+    parser.add_argument("--tokenizer_path", type=int, default=6, help="llm tokenizer path")
     parser.add_argument("--weight_decay", type=float, default=1e-3, help="weight decay rate")
     parser.add_argument("--feature_w", type=float, default=0.01, help="weight of feature kd loss")
     parser.add_argument("--fcst_w", type=float, default=1, help="weight of forecast loss")
@@ -133,13 +134,13 @@ def load_data(args):
         'ETTm1': Dataset_ETT_minute,
         'ETTm2': Dataset_ETT_minute
         }
-    # data_class = data_map.get(args.data_path, Dataset_Custom)
-    if("ETTh1" in args.data_path or "ETTh2" in args.data_path):
-        data_class = Dataset_ETT_hour
-    elif ("ETTm1" in args.data_path or "ETTm2" in args.data_path):
-        data_class = Dataset_ETT_minute
-    else :
-        data_class = Dataset_Custom
+    data_class = data_map.get(args.data_path, Dataset_Custom)
+    # if("ETTh1" in args.data_path or "ETTh2" in args.data_path):
+    #     data_class = Dataset_ETT_hour
+    # elif ("ETTm1" in args.data_path or "ETTm2" in args.data_path):
+    #     data_class = Dataset_ETT_minute
+    # else :
+    #     data_class = Dataset_Custom
     train_set = data_class(flag='train', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
     val_set = data_class(flag='val', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
     test_set = data_class(flag='test', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)

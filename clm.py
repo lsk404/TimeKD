@@ -16,10 +16,10 @@ class BaseModelOutputWithPastAndCrossAttentions:
     cross_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
 
 class MSK(nn.Module):
-    def __init__(self, device="cuda:0", l_layer=6):
+    def __init__(self, device="cuda:0", l_layer=6,model_path='gpt2'):
         super(MSK, self).__init__()
         self.device = device
-        self.gpt2 = GPT2Model.from_pretrained("gpt2", attn_implementation="eager",
+        self.gpt2 = GPT2Model.from_pretrained(model_path, attn_implementation="eager",
                                               output_attentions=True, output_hidden_states=True)  #attn_implementation="sdpa" OR "eager"
         
         self.gpt2.h = self.gpt2.h[:l_layer]
@@ -129,7 +129,8 @@ class GenPromptEmb(nn.Module):
     def __init__(
         self,
         data_path='ETTh1',
-        model_name="gpt2",
+        model_path="gpt2",
+        tokenizer_path="gpt2",
         num_nodes=7,
         device='cuda:6',
         input_len=96,
@@ -139,7 +140,8 @@ class GenPromptEmb(nn.Module):
     ):  
         super(GenPromptEmb, self).__init__()
         self.data_path = data_path
-        self.model_name = model_name
+        self.model_path = model_path
+        self.tokenizer_path = tokenizer_path
         self.num_nodes = num_nodes
         self.device = device
         self.input_len = input_len
@@ -150,8 +152,8 @@ class GenPromptEmb(nn.Module):
         self.len = self.input_len - 1
         self.out_len = self.output_len -1
 
-        self.tokenizer = GPT2Tokenizer.from_pretrained(model_name)
-        self.gpt2 = MSK(device=self.device, l_layer=self.l_layer)
+        self.tokenizer = GPT2Tokenizer.from_pretrained(tokenizer_path)
+        self.gpt2 = MSK(device=self.device, l_layer=self.l_layer,model_path=model_path)
         self.sub_ac = SCA(
             d_model=self.num_nodes, n_heads=1, d_ff=4*d_model, norm='LayerNorm',
             attn_dropout=0.1, dropout=0.1, pre_norm=True, activation="gelu",

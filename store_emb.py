@@ -18,7 +18,9 @@ def parse_args():
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--d_model", type=int, default=768)
     parser.add_argument("--l_layers", type=int, default=12)
-    parser.add_argument("--model_name", type=str, default="gpt2")
+    # parser.add_argument("--model_name", type=str, default="gpt2")
+    parser.add_argument("--model_path", type=str, default="gpt2")
+    parser.add_argument("--tokenizer_path", type=str, default="gpt2")
     parser.add_argument("--divide", type=str, default="train")
     parser.add_argument("--num_workers", type=int, default=10)
     return parser.parse_args()
@@ -57,7 +59,8 @@ def save_embeddings(args):
 
     gen_prompt_emb = GenPromptEmb(
         data_path=args.data_path,
-        model_name=args.model_name,
+        model_path = args.model_path,
+        tokenizer_path=args.tokenizer_path,
         num_nodes=args.num_nodes,
         device=args.device,
         input_len=args.input_len,
