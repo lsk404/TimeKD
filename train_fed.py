@@ -10,6 +10,10 @@ from data_provider.data_loader_emb import Dataset_ETT_hour, Dataset_ETT_minute, 
 from model.TimeKD import Dual
 from utils.kd_loss import KDLoss
 from utils.metrics import MSE, MAE, metric
+import copy
+from fed.sampling import dataset_iid
+from fed.Update import LocalUpdate
+from fed.fed import FedAvg
 import faulthandler
 faulthandler.enable()
 torch.cuda.empty_cache()
@@ -53,6 +57,14 @@ def parse_args():
         default="./logs/" + str(time.strftime("%Y-%m-%d-%H:%M:%S")) + "-",
         help="save path",
     )
+    ## federated-learning
+    parser.add_argument('--num_users', type=int, default=100, help="number of users: K")
+    parser.add_argument('--frac', type=float, default=0.1, help="the fraction of clients: C") # 参与训练的客户端比例
+    parser.add_argument('--local_ep', type=int, default=5, help="the number of local epochs: E") # 客户端本地的epochs数量
+    parser.add_argument('--local_bs', type=int, default=10, help="local batch size: B")
+    parser.add_argument('--bs', type=int, default=32, help="test batch size")
+    parser.add_argument("--all_clients", action='store_true', help='aggregation over all clients') # 是否在所有客户端上进行聚合
+    parser.add_argument('--verbose', action='store_true', help='verbose print')
     return parser.parse_args()
 
 
@@ -100,7 +112,6 @@ class trainer:
         self.att_w = 0.01
         self.criterion = KDLoss(self.feature_loss, self.fcst_loss, self.recon_loss, self.att_loss,  self.feature_w,  self.fcst_w,  self.recon_w,  self.att_w)
 
-        print("The number of trainable parameters: {}".format(self.model.count_trainable_params()))
         print("The number of parameters: {}".format(self.model.param_num()))
         print(self.model)
 
@@ -147,11 +158,11 @@ def load_data(args):
     
     scaler = train_set.scaler
 
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
-    val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
-    test_loader = DataLoader(test_set, batch_size=1, shuffle=False, drop_last=False, num_workers=args.num_workers)
+    # train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
+    # val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
+    # test_loader = DataLoader(test_set, batch_size=1, shuffle=False, drop_last=False, num_workers=args.num_workers)
 
-    return train_loader, val_loader, test_loader, scaler
+    return train_set, val_set, test_set, scaler # 改为返回dataset而不是datasetloader
 
 def seed_it(seed):
     random.seed(seed)
@@ -167,7 +178,7 @@ def seed_it(seed):
 
 def main():
     args = parse_args()
-    train_loader, val_loader, test_loader,scaler = load_data(args)
+    train_set, val_set, test_set, scaler = load_data(args) # 获取dataset和scaler
     seed_it(args.seed)
     device = torch.device(args.device)
     
@@ -205,35 +216,56 @@ def main():
         device=device,
         epochs=args.epochs
         )
-
     print("Start training...", flush=True)
+    w_glob = engine.model.state_dict()
+    if(args.all_clients):
+        print("Aggregation over all clients")
+        # w_locals 代表每个用户的权重
+        w_locals = [w_glob for i in range(args.num_users)] # 拷贝权重到每个用户
+    dict_users = dataset_iid(train_set, args.num_users) # 随机为用户分配数据
+    # 第i个用户拥有dataset中下标为dict_users[i]的数据
 
     for i in range(1, args.epochs + 1):
         t1 = time.time()
-        train_loss = []
-        train_mse = []
-        train_mae = []
-        
-        for iter, (x, y, emb) in enumerate(train_loader):
-            trainx = torch.Tensor(x).to(device).float()
-            trainy = torch.Tensor(y).to(device).float()
-            emb = torch.Tensor(emb).to(device).float()
-            metrics = engine.train(trainx, trainy, emb)
-            train_loss.append(metrics[0])
-            train_mse.append(metrics[1])
-            train_mae.append(metrics[2])
+        train_loss_locals = [] # 每个用户自主训练得到的loss
+        train_mse_locals = [] 
+        train_mae_locals = [] 
+        if not args.all_clients:
+            w_locals = []
+        m = max(int(args.frac * args.num_users), 1) # 几个用户要参与训练
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False) # 随机选择m个用户
+        for idx in idxs_users:
+            local = LocalUpdate(args=args, dataset=train_set, idxs=dict_users[idx]) # 用来训练一个用户
+            w, loss,mse,mae = local.train(engine=copy.deepcopy(engine))
+
+            if args.all_clients:
+                w_locals[idx] = copy.deepcopy(w)
+            else:
+                w_locals.append(copy.deepcopy(w))
+            train_loss_locals.append(copy.deepcopy(loss))
+            train_mse_locals.append(copy.deepcopy(mse))
+            train_mae_locals.append(copy.deepcopy(mae))
+        # 更新全局权重
+        w_glob = FedAvg(w_locals)
+        # 将全局权重复制到net中
+        engine.model.load_state_dict(w_glob)
 
         t2 = time.time()
+        train_loss = sum(train_loss_locals) / len(train_loss_locals)
+        train_mse = sum(train_mse_locals) / len(train_mse_locals)
+        train_mae = sum(train_mae_locals) / len(train_mae_locals)
         log = "Epoch: {:03d}, Training Time: {:.4f} secs"
         print(log.format(i, (t2 - t1)))
         train_time.append(t2 - t1)
+
 
         # Validation
         val_loss = []
         val_mse = []
         val_mae = []
         s1 = time.time()
-
+        val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
+        test_loader = DataLoader(test_set, batch_size=1, shuffle=False, drop_last=False, num_workers=args.num_workers)
         for iter, (x, y, emb) in enumerate(val_loader):
             valx = torch.Tensor(x).to(device).float()
             valy = torch.Tensor(y).to(device).float()

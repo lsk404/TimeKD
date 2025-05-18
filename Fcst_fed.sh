@@ -16,8 +16,6 @@ tokenizer_path="gpt2"
 root_path="$HOME/autodl-tmp/all_datasets/ETT-small/"
 data_path="ETTh1" 
 epochs=(100)
-
-
 for seq_len in "${seq_lens[@]}"; do 
   for pred_len in "${pred_lens[@]}"; do
     for learning_rate in "${learning_rates[@]}"; do
@@ -27,7 +25,7 @@ for seq_len in "${seq_lens[@]}"; do
             for batch_size in "${batch_sizes[@]}"; do
               log_path="./Results/Fcst/${data_path}/"
               mkdir -p $log_path
-              log_file="${log_path}i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}.log"
+              log_file="${log_path}i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}_fed.log"
               nohup python train.py \
                 --root_path $root_path \
                 --data_path $data_path \
