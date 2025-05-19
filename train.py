@@ -100,7 +100,6 @@ class trainer:
         self.att_w = 0.01
         self.criterion = KDLoss(self.feature_loss, self.fcst_loss, self.recon_loss, self.att_loss,  self.feature_w,  self.fcst_w,  self.recon_w,  self.att_w)
 
-        print("The number of trainable parameters: {}".format(self.model.count_trainable_params()))
         print("The number of parameters: {}".format(self.model.param_num()))
         print(self.model)
 
