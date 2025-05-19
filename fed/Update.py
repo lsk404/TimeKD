@@ -20,8 +20,8 @@ class DatasetSplit(Dataset):
         return len(self.idxs)
 
     def __getitem__(self, item):
-        image, label = self.dataset[self.idxs[item]]
-        return image, label
+        (x, y, emb) = self.dataset[self.idxs[item]]
+        return (x, y, emb)
 
 
 class LocalUpdate(object):

@@ -45,21 +45,23 @@ class Dataset_ETT_hour(Dataset):
         # self.patch_len = patch_len
 
         # Append '.csv' if not present
+        data_path = os.path.join(root_path, data_path)
         if not data_path.endswith('.csv'):
+            data_path_dir = data_path
+            data_path_file = data_path+'.csv'
+        else:
+            data_path_dir = data_path[:-4]
             data_path_file = data_path
-            data_path += '.csv' 
-        self.data_path = os.path.join(root_path, data_path)
+        self.data_path_dir = data_path_dir
         self.data_path_file = data_path_file
-
         self.model_name = model_name
-        self.embed_path = f"{data_path_file}/{self.pred_len}/{flag}/"
+        self.embed_path = f"{data_path_dir}/{self.pred_len}/{flag}/"
 
         self.__read_data__()
 
     def __read_data__(self):
         self.scaler = StandardScaler()
-        df_raw = pd.read_csv(os.path.join(self.root_path,
-                                          self.data_path))
+        df_raw = pd.read_csv(self.data_path_file)
 
         border1s = [0, 12*30*24 - self.seq_len, 12*30*24+4*30*24 - self.seq_len]
         border2s = [12*30*24, 12*30*24+4*30*24, 12*30*24+8*30*24]
@@ -160,22 +162,27 @@ class Dataset_ETT_minute(Dataset):
         self.data_path = data_path
         self.flag = flag
 
-        # Append '.csv' if not present
-        if not data_path.endswith('.csv'):
-            data_path_file = data_path
-            data_path += '.csv' 
-        self.data_path = os.path.join(root_path, data_path)
-        self.data_path_file = data_path_file
 
+        # self.patch_len = patch_len
+
+        # Append '.csv' if not present
+        data_path = os.path.join(root_path, data_path)
+        if not data_path.endswith('.csv'):
+            data_path_dir = data_path # 文件路径（不含有csv）
+            data_path_file = data_path+'.csv' # 以.csv结尾的文件路径
+        else:
+            data_path_dir = data_path[:-4]
+            data_path_file = data_path
+        self.data_path_file = data_path_file
+        self.data_path_dir = data_path_dir
         self.model_name = model_name
-        self.embed_path = f"{data_path_file}/{self.pred_len}/{flag}/"
+        self.embed_path = f"{data_path_dir}/{self.pred_len}/{flag}/"
 
         self.__read_data__()
 
     def __read_data__(self):
         self.scaler = StandardScaler()
-        df_raw = pd.read_csv(os.path.join(self.root_path,
-                                          self.data_path))
+        df_raw = pd.read_csv(self.data_path_file)
 
         border1s = [0, 12*30*24*4 - self.seq_len, 12*30*24*4+4*30*24*4 - self.seq_len]
         border2s = [12*30*24*4, 12*30*24*4+4*30*24*4, 12*30*24*4+8*30*24*4]
@@ -278,21 +285,26 @@ class Dataset_Custom(Dataset):
         self.root_path = root_path
         self.data_path = data_path
 
-        if not data_path.endswith('.csv'):
-            data_path_file = data_path
-            data_path += '.csv' 
-        self.data_path = os.path.join(root_path, data_path)
-        self.data_path_file = data_path_file
 
+
+        # Append '.csv' if not present
+        data_path = os.path.join(root_path, data_path)
+        if not data_path.endswith('.csv'):
+            data_path_dir = data_path # 文件路径（不含有csv）
+            data_path_file = data_path+'.csv' # 以.csv结尾的文件路径
+        else:
+            data_path_dir = data_path[:-4]
+            data_path_file = data_path
+        self.data_path_file = data_path_file
+        self.data_path_dir = data_path_dir
         self.model_name = model_name
-        self.embed_path = f"{data_path_file}/{self.pred_len}/{flag}/"
+        self.embed_path = f"{data_path_dir}/{self.pred_len}/{flag}/"
 
         self.__read_data__()
 
     def __read_data__(self):
         self.scaler = StandardScaler()
-        df_raw = pd.read_csv(os.path.join(self.root_path,
-                                          self.data_path))
+        df_raw = pd.read_csv(self.data_path_file)
 
         '''
         df_raw.columns: ['date', ...(other features), target feature]

@@ -236,15 +236,15 @@ def main():
         idxs_users = np.random.choice(range(args.num_users), m, replace=False) # 随机选择m个用户
         for idx in idxs_users:
             local = LocalUpdate(args=args, dataset=train_set, idxs=dict_users[idx]) # 用来训练一个用户
-            w, loss,mse,mae = local.train(engine=copy.deepcopy(engine))
+            w, train_loss,train_mse,train_mae = local.train(engine=copy.deepcopy(engine))
 
             if args.all_clients:
                 w_locals[idx] = copy.deepcopy(w)
             else:
                 w_locals.append(copy.deepcopy(w))
-            train_loss_locals.append(copy.deepcopy(loss))
-            train_mse_locals.append(copy.deepcopy(mse))
-            train_mae_locals.append(copy.deepcopy(mae))
+            train_loss_locals.append(copy.deepcopy(train_loss))
+            train_mse_locals.append(copy.deepcopy(train_mse))
+            train_mae_locals.append(copy.deepcopy(train_mae))
         # 更新全局权重
         w_glob = FedAvg(w_locals)
         # 将全局权重复制到net中
