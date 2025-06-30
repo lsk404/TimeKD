@@ -298,22 +298,32 @@ class GenPromptEmb(nn.Module):
                 GT_HD_emb_list.append((i, GT_HD_token, j))
                 HD_emb_list.append((i, HD_token, j))
 
+        # 初始化两个张量用于保存 GT 和 HD 的 prompt embeddings
+        # shape: (batch_size, max_gt_token, d_model, num_experts) 或类似结构
         prompt_emb_GT = torch.zeros((len(x), max_gt_token, self.d_model, x.shape[2]), dtype=torch.float32, device=self.device)
         prompt_emb_HD = torch.zeros((len(x), max_hd_token, self.d_model, x.shape[2]), dtype=torch.float32, device=self.device)
 
+        # 遍历 GT_HD_emb_list 和 HD_emb_list 中的数据
         for (i, GT_HD_token, j), (_, HD_token, _) in zip(GT_HD_emb_list, HD_emb_list):
+            # 通过 forward 函数获取模型输出的 embedding 表示
             GT_HD_emb, HD_emb = self.forward(GT_HD_token.squeeze(0), HD_token.squeeze(0), gt_token_types, hd_token_types)
+
+            # 增加一个维度，使形状变为 (1, seq_len, d_model)
             GT_HD_emb = GT_HD_emb.unsqueeze(0)
             HD_emb = HD_emb.unsqueeze(0)
 
+            # 对 GT_HD_emb 进行 padding 操作，使其达到 max_gt_token 的长度
             padding_length_GT = max_gt_token - GT_HD_emb.shape[1]
             if padding_length_GT > 0:
+                # 取最后一个 token 的 embedding 并重复 padding_length_GT 次
                 last_token_embedding_GT = GT_HD_emb[:, -1, :].unsqueeze(1)
                 padding_GT = last_token_embedding_GT.repeat(1, padding_length_GT, 1)
+                # 将原始 embedding 和 padding 拼接在一起
                 GT_HD_emb_padded = torch.cat([GT_HD_emb, padding_GT], dim=1)
             else:
                 GT_HD_emb_padded = GT_HD_emb
 
+            # 对 HD_emb 进行类似的 padding 操作
             padding_length_HD = max_hd_token - HD_emb.shape[1]
             if padding_length_HD > 0:
                 last_token_embedding_HD = HD_emb[:, -1, :].unsqueeze(1)
@@ -322,12 +332,14 @@ class GenPromptEmb(nn.Module):
             else:
                 HD_emb_padded = HD_emb
 
+            # 将 pad 后的 embedding 放入对应的 prompt_emb_GT 和 prompt_emb_HD 张量中
             prompt_emb_GT[i, :max_gt_token, :, j] = GT_HD_emb_padded.unsqueeze(0)
             prompt_emb_HD[i, :max_hd_token, :, j] = HD_emb_padded.unsqueeze(0)
 
-        prompt_emb_GT_1 = prompt_emb_GT[:, -1, :, :]
-        prompt_emb_HD_1 = prompt_emb_HD[:, -1, :, :]
-
+        # 提取 GT 和 HD 的最后一层 prompt embedding
+        prompt_emb_GT_1 = prompt_emb_GT[:, -1, :, :]  # shape: (batch_size, d_model, num_experts)
+        prompt_emb_HD_1 = prompt_emb_HD[:, -1, :, :]  # 同上
+        
         sub_out = self.sub_ac(prompt_emb_GT_1, prompt_emb_HD_1, prompt_emb_HD_1)
         sub_out = sub_out.permute(0, 2, 1).squeeze()
         return sub_out

@@ -187,7 +187,7 @@ def main():
     epochs_since_best_mse = 0
 
     path = os.path.join(args.save, args.data_path, 
-                        f"{args.pred_len}_{args.channel}_{args.e_layer}_{args.lrate}_{args.dropout_n}_{args.seed}_{args.att_w}/")
+                        f"{args.pred_len}_{args.channel}_{args.e_layer}_{args.lrate}_{args.dropout_n}_{args.seed}_{args.att_w}_fed/")
     if not os.path.exists(path):
         os.makedirs(path)
      

@@ -44,7 +44,7 @@ class TSTEncoderLayer(nn.Module):
         # Add & Norm
         self.dropout_attn = nn.Dropout(dropout)
         self.norm_attn = nn.LayerNorm(d_model)  # Using LayerNorm before attention
-
+        
         # Position-wise Feed-Forward
         self.ff = nn.Sequential(nn.Linear(d_model, d_ff, bias=bias),
                                 get_activation_fn(activation),
