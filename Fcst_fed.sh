@@ -25,8 +25,9 @@ for seq_len in "${seq_lens[@]}"; do
             for batch_size in "${batch_sizes[@]}"; do
               log_path="./Results/Fcst/${data_path}/"
               mkdir -p $log_path
-              log_file="${log_path}i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}_fed.log"
-              nohup python train.py \
+              timestamp=$(date +"%Y%m%d_%H%M%S")
+              log_file="${timestamp}_${log_path}i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}_fed.log"
+              nohup python train_fed.py \
                 --root_path $root_path \
                 --data_path $data_path \
                 --device cuda:0 \

@@ -2,3 +2,5 @@ env_copy.txt
 gpt2_model/
 gpt2_tokenizer/
 data/
+log/
+*.pyc

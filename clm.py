@@ -23,6 +23,7 @@ class MSK(nn.Module):
                                               output_attentions=True, output_hidden_states=True)  #attn_implementation="sdpa" OR "eager"
         
         self.gpt2.h = self.gpt2.h[:l_layer]
+        # gpt2.h是解码器层
         for param in self.gpt2.h.parameters():
             param.requires_grad = False
 
@@ -76,10 +77,11 @@ class MSK(nn.Module):
         all_self_attentions = () if output_attentions else None
         all_hidden_states = () if output_hidden_states else None
         presents = () if use_cache else None
-
         for i, (block, layer_past) in enumerate(zip(self.gpt2.h, past_key_values)):
-            attention_mask =  calibrated_mask
-            
+            attention_mask = calibrated_mask
+            # print("output_attentions:", output_attentions)
+            # print("use_cache:", use_cache)
+        
             outputs = block(
                 hidden_states,
                 layer_past=layer_past,
@@ -88,6 +90,9 @@ class MSK(nn.Module):
                 use_cache=use_cache,
                 output_attentions=output_attentions,
             )
+
+            # print(len(outputs)) 
+            # print(outputs)
             hidden_states = outputs[0]
 
             if use_cache:

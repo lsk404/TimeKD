@@ -11,7 +11,7 @@ from model.TimeKD import Dual
 from utils.kd_loss import KDLoss
 from utils.metrics import MSE, MAE, metric
 import copy
-from fed.sampling import dataset_iid
+from fed.sampling import dataset_contiguous
 from fed.Update import LocalUpdate
 from fed.fed import FedAvg
 import faulthandler
@@ -222,7 +222,7 @@ def main():
         print("Aggregation over all clients")
         # w_locals 代表每个用户的权重
         w_locals = [w_glob for i in range(args.num_users)] # 拷贝权重到每个用户
-    dict_users = dataset_iid(train_set, args.num_users) # 随机为用户分配数据
+    dict_users = dataset_contiguous(train_set, args.num_users) # 随机为用户分配数据
     # 第i个用户拥有dataset中下标为dict_users[i]的数据
 
     for i in range(1, args.epochs + 1):

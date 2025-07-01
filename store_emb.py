@@ -79,10 +79,12 @@ def save_embeddings(args):
     # max_token_counts = []
 
     for i, (x, y, x_mark, y_mark) in enumerate(data_loader):
+        file_path = f"{save_path}{i}.h5"
+        if(os.path.exists(file_path)):
+            continue
         embeddings = gen_prompt_emb.generate_embeddings(x.to(device), y.to(device), x_mark.to(device), y_mark.to(device))
         # max_token_counts.append(max_token_count)
 
-        file_path = f"{save_path}{i}.h5"
         with h5py.File(file_path, 'w') as hf:
             hf.create_dataset('embeddings', data=embeddings.detach().cpu().numpy())
 

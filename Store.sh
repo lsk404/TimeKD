@@ -17,17 +17,19 @@ divides=("train" "val" "test")
 device="cuda:0"
 num_nodes=7
 input_len=96
-output_len_values=(24 36 48 96 192)
+# output_len_values=(24 36 48 96 192)
+output_len_values=(36 48 96)
 # model_name=("gpt2")
-model_path="gpt2"
-tokenizer_path="gpt2"
+model_path="./gpt2_model"
+tokenizer_path="./gpt2_tokenizer"
 d_model=768
 l_layer=12
 
 for data_path in "${data_paths[@]}"; do
   for divide in "${divides[@]}"; do
     for output_len in "${output_len_values[@]}"; do
-      log_file="./log/${data_path}_${output_len}_${divide}.log"
+      timestamp=$(date +"%Y%m%d_%H%M%S")
+      log_file="./log/${timestamp}_${data_path}_${output_len}_${divide}.log"
       python store_emb.py \
         --root_path $root_path \
         --data_path $data_path \
