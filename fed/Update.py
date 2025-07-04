@@ -11,16 +11,15 @@ from sklearn import metrics
 import time
 
 
-class DatasetSplit(Dataset):
-    def __init__(self, dataset, idxs):
+class LocalDataset(Dataset):
+    def __init__(self, dataset):
         self.dataset = dataset
-        self.idxs = list(idxs)
 
     def __len__(self):
-        return len(self.idxs)
+        return len(self.dataset)
 
-    def __getitem__(self, item):
-        (x, y, emb) = self.dataset[self.idxs[item]]
+    def __getitem__(self, index):
+        (x, y, emb) = self.dataset[index]
         return (x, y, emb)
 
 
@@ -29,9 +28,9 @@ class LocalUpdate(object):
         self.args = args
         self.loss_func = nn.CrossEntropyLoss()
         self.selected_clients = []
-        self.ldr_train = DataLoader(DatasetSplit(dataset,idxs), batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
+        self.dataLoader_train = DataLoader(LocalDataset(dataset), batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
 
-    def train(self, engine):
+    def train(self, local_model):
         # train and update
         epoch_loss = []
         epoch_mse = []
@@ -41,20 +40,20 @@ class LocalUpdate(object):
             batch_loss = []
             batch_mse = []
             batch_mae = []
-            for batch_idx, (x, y, emb) in enumerate(self.ldr_train):
+            for batch_idx, (x, y, emb) in enumerate(self.dataLoader_train):
                 trainx = torch.Tensor(x).to(device).float()
                 trainy = torch.Tensor(y).to(device).float()
                 emb = torch.Tensor(emb).to(device).float()
-                metrics = engine.train(trainx, trainy, emb)
+                metrics = local_model.train(trainx, trainy, emb)
                 if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\tmse:{:.6f}\tmae:{:.6f}'.format(
-                            iter, batch_idx * len(x), len(self.ldr_train.dataset),
-                                100. * batch_idx / len(self.ldr_train), metrics[0],metrics[1],metrics[2]))
+                            iter, batch_idx * len(x), len(self.dataLoader_train.dataset),
+                                100. * batch_idx / len(self.dataLoader_train), metrics[0],metrics[1],metrics[2]))
                 batch_loss.append(metrics[0])
                 batch_mse.append(metrics[1])
                 batch_mae.append(metrics[2])
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_mse.append(sum(batch_mse)/len(batch_mse))
             epoch_mae.append(sum(batch_mae)/len(batch_mae))
-        return engine.model.state_dict(), sum(epoch_loss) / len(epoch_loss),sum(epoch_mse)/len(epoch_mse),sum(epoch_mae)/len(epoch_mae)
+        return local_model.model.state_dict(), sum(epoch_loss) / len(epoch_loss),sum(epoch_mse)/len(epoch_mse),sum(epoch_mae)/len(epoch_mae)
 

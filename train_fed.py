@@ -11,9 +11,9 @@ from model.TimeKD import Dual
 from utils.kd_loss import KDLoss
 from utils.metrics import MSE, MAE, metric
 import copy
-from fed.sampling import dataset_contiguous
-from fed.Update import LocalUpdate
-from fed.fed import FedAvg
+from fed.sampling import Distribute_data
+from fed.update import LocalUpdate
+from fed.fedAvg import FedAvg
 import faulthandler
 faulthandler.enable()
 torch.cuda.empty_cache()
@@ -146,12 +146,7 @@ def load_data(args):
         'ETTm2': Dataset_ETT_minute
         }
     data_class = data_map.get(args.data_path, Dataset_Custom)
-    # if("ETTh1" in args.data_path or "ETTh2" in args.data_path):
-    #     data_class = Dataset_ETT_hour
-    # elif ("ETTm1" in args.data_path or "ETTm2" in args.data_path):
-    #     data_class = Dataset_ETT_minute
-    # else :
-    #     data_class = Dataset_Custom
+    
     train_set = data_class(flag='train', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
     val_set = data_class(flag='val', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
     test_set = data_class(flag='test', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
@@ -218,42 +213,38 @@ def main():
         )
     print("Start training...", flush=True)
     w_glob = engine.model.state_dict()
-    if(args.all_clients):
+    if(args.all_clients): # 聚合所有的用户，或者只聚合当前epoch训练的用户
         print("Aggregation over all clients")
-        # w_locals 代表每个用户的权重
-        w_locals = [w_glob for i in range(args.num_users)] # 拷贝权重到每个用户
-    dict_users = dataset_contiguous(train_set, args.num_users) # 随机为用户分配数据
-    # 第i个用户拥有dataset中下标为dict_users[i]的数据
+        # w_locals_dict 保存每个用户的state_dict的字典
+        w_locals_dict = {f"client_{i+1}":w_glob for i in range(args.num_users)} # 拷贝state_dict到每个用户
+    client_dataset_dict = Distribute_data(train_set, args.num_users,method="contiguous")# 为用户分配数据
+    # client_dataset_dict = Distribute_data(train_set, args.num_users,method="random")# 为用户分配数据
+    data_radio = {client_name: len(data)/len(train_set)  for client_name,data in client_dataset_dict.items()} # client拥有的数据比例
 
     for i in range(1, args.epochs + 1):
         t1 = time.time()
-        train_loss_locals = [] # 每个用户自主训练得到的loss
-        train_mse_locals = [] 
-        train_mae_locals = [] 
+        mtrain_loss = 0
+        mtrain_mse = 0
+        mtrain_mae = 0
         if not args.all_clients:
-            w_locals = []
+            w_locals_dict = {}
         m = max(int(args.frac * args.num_users), 1) # 几个用户要参与训练
-        idxs_users = np.random.choice(range(args.num_users), m, replace=False) # 随机选择m个用户
-        for idx in idxs_users:
-            local = LocalUpdate(args=args, dataset=train_set, idxs=dict_users[idx]) # 用来训练一个用户
-            w, train_loss,train_mse,train_mae = local.train(engine=copy.deepcopy(engine))
+        client_names = np.random.choice(list(client_dataset_dict.keys()), m, replace=False)
+        sum_radio = sum(data_radio[client] for client in client_names)
+        for client_name in client_names:
+            local = LocalUpdate(args=args, dataset=client_dataset_dict[client_name]) # 用来训练一个用户
+            w, train_loss,train_mse,train_mae = local.train(local_model=copy.deepcopy(engine))
 
-            if args.all_clients:
-                w_locals[idx] = copy.deepcopy(w)
-            else:
-                w_locals.append(copy.deepcopy(w))
-            train_loss_locals.append(copy.deepcopy(train_loss))
-            train_mse_locals.append(copy.deepcopy(train_mse))
-            train_mae_locals.append(copy.deepcopy(train_mae))
+            w_locals_dict[client_name] = copy.deepcopy(w)
+            mtrain_loss += train_loss * data_radio[client_name] / sum_radio
+            mtrain_mse += train_mse * data_radio[client_name] / sum_radio
+            mtrain_mae += train_mae * data_radio[client_name] / sum_radio
         # 更新全局权重
-        w_glob = FedAvg(w_locals)
+        w_glob = FedAvg(w_locals_dict,data_radio)
         # 将全局权重复制到net中
         engine.model.load_state_dict(w_glob)
 
         t2 = time.time()
-        train_loss = sum(train_loss_locals) / len(train_loss_locals)
-        train_mse = sum(train_mse_locals) / len(train_mse_locals)
-        train_mae = sum(train_mae_locals) / len(train_mae_locals)
         log = "Epoch: {:03d}, Training Time: {:.4f} secs"
         print(log.format(i, (t2 - t1)))
         train_time.append(t2 - t1)
@@ -280,9 +271,6 @@ def main():
         print(log.format(i, (s2 - s1)))
         val_time.append(s2 - s1)
 
-        mtrain_loss = np.mean(train_loss)
-        mtrain_mse = np.mean(train_mse)
-        mtrain_mae = np.mean(train_mae)
         mvalid_loss = np.mean(val_loss)
         mvalid_mse = np.mean(val_mse)
         mvalid_mae = np.mean(val_mae)

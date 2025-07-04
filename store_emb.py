@@ -86,6 +86,7 @@ def save_embeddings(args):
         # max_token_counts.append(max_token_count)
 
         with h5py.File(file_path, 'w') as hf:
+            # print(f"[INFO] Saving embeddings to {file_path}")
             hf.create_dataset('embeddings', data=embeddings.detach().cpu().numpy())
 
         # Save and visualize the first sample

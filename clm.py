@@ -98,7 +98,10 @@ class MSK(nn.Module):
             if use_cache:
                 presents = presents + (outputs[1],)
             if output_attentions:
-                all_self_attentions = all_self_attentions + (outputs[2],)
+                if len(outputs) == 3:
+                    all_self_attentions = all_self_attentions + (outputs[2],)
+                else:
+                    all_self_attentions = all_self_attentions + (None,)
         
         hidden_states = self.gpt2.ln_f(hidden_states)
         hidden_states = hidden_states.view((-1,) + input_shape[1:] + (hidden_states.size(-1),))
