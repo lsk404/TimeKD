@@ -4,3 +4,6 @@ gpt2_tokenizer/
 data/
 log/
 *.pyc
+Results/
+*.doc
+*.docx

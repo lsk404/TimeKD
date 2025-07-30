@@ -14,6 +14,7 @@ import copy
 from fed.sampling import Distribute_data
 from fed.update import LocalUpdate
 from fed.fedAvg import FedAvg
+from fed.fedtools import compute_l2_norm_diff
 import faulthandler
 faulthandler.enable()
 torch.cuda.empty_cache()
@@ -65,6 +66,7 @@ def parse_args():
     parser.add_argument('--bs', type=int, default=32, help="test batch size")
     parser.add_argument("--all_clients", action='store_true', help='aggregation over all clients') # 是否在所有客户端上进行聚合
     parser.add_argument('--verbose', action='store_true', help='verbose print')
+    parser.add_argument('--threshold', type=int, default=1,help='threshold of the L2 norm of the difference in w')
     return parser.parse_args()
 
 
@@ -170,7 +172,6 @@ def seed_it(seed):
     torch.manual_seed(seed)
     torch.backends.cudnn.benchmark = False
 
-
 def main():
     args = parse_args()
     train_set, val_set, test_set, scaler = load_data(args) # 获取dataset和scaler
@@ -218,7 +219,6 @@ def main():
         # w_locals_dict 保存每个用户的state_dict的字典
         w_locals_dict = {f"client_{i+1}":w_glob for i in range(args.num_users)} # 拷贝state_dict到每个用户
     client_dataset_dict = Distribute_data(train_set, args.num_users,method="contiguous")# 为用户分配数据
-    # client_dataset_dict = Distribute_data(train_set, args.num_users,method="random")# 为用户分配数据
     data_radio = {client_name: len(data)/len(train_set)  for client_name,data in client_dataset_dict.items()} # client拥有的数据比例
 
     for i in range(1, args.epochs + 1):
@@ -230,20 +230,28 @@ def main():
             w_locals_dict = {}
         m = max(int(args.frac * args.num_users), 1) # 几个用户要参与训练
         client_names = np.random.choice(list(client_dataset_dict.keys()), m, replace=False)
-        sum_radio = sum(data_radio[client] for client in client_names)
+        print(client_names)
+        sum_radio = 0
+
         for client_name in client_names:
             local = LocalUpdate(args=args, dataset=client_dataset_dict[client_name]) # 用来训练一个用户
             w, train_loss,train_mse,train_mae = local.train(local_model=copy.deepcopy(engine))
-
+            delta_norm = compute_l2_norm_diff(w_locals_dict[client_name], w) # 计算w的差的2范数
             w_locals_dict[client_name] = copy.deepcopy(w)
-            mtrain_loss += train_loss * data_radio[client_name] / sum_radio
-            mtrain_mse += train_mse * data_radio[client_name] / sum_radio
-            mtrain_mae += train_mae * data_radio[client_name] / sum_radio
+            if (True): # TODO 添加临界条件,将下面的更新loss放到这里面
+                pass
+            mtrain_loss += train_loss * data_radio[client_name]
+            mtrain_mse += train_mse * data_radio[client_name]
+            mtrain_mae += train_mae * data_radio[client_name]
+            sum_radio += data_radio[client_name]
+        mtrain_loss /= sum_radio
+        mtrain_mse /= sum_radio
+        mtrain_mae /= sum_radio
         # 更新全局权重
         w_glob = FedAvg(w_locals_dict,data_radio)
         # 将全局权重复制到net中
         engine.model.load_state_dict(w_glob)
-
+        
         t2 = time.time()
         log = "Epoch: {:03d}, Training Time: {:.4f} secs"
         print(log.format(i, (t2 - t1)))

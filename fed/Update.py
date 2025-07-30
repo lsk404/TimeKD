@@ -40,6 +40,7 @@ class LocalUpdate(object):
             batch_loss = []
             batch_mse = []
             batch_mae = []
+            batch_grad_norm = []
             for batch_idx, (x, y, emb) in enumerate(self.dataLoader_train):
                 trainx = torch.Tensor(x).to(device).float()
                 trainy = torch.Tensor(y).to(device).float()
@@ -52,8 +53,10 @@ class LocalUpdate(object):
                 batch_loss.append(metrics[0])
                 batch_mse.append(metrics[1])
                 batch_mae.append(metrics[2])
+
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_mse.append(sum(batch_mse)/len(batch_mse))
             epoch_mae.append(sum(batch_mae)/len(batch_mae))
+            
         return local_model.model.state_dict(), sum(epoch_loss) / len(epoch_loss),sum(epoch_mse)/len(epoch_mse),sum(epoch_mae)/len(epoch_mae)
 
