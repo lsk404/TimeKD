@@ -10,13 +10,13 @@ d_llm=(768)
 e_layers=(2)
 dropout_ns=(0.5)
 batch_sizes=(16)
+temperatures=(0.7 0.8 0.9 1.0)
 # model_name="gpt2"
 model_path="./gpt2_model"
 tokenizer_path="./gpt2_tokenizer"
 root_path="./data/ETT-small/ETT-small/"
 data_path="ETTh1" 
 epochs=(100)
-local_eps=(1 2 3 4 5)
 for seq_len in "${seq_lens[@]}"; do 
   for pred_len in "${pred_lens[@]}"; do
     for learning_rate in "${learning_rates[@]}"; do
@@ -24,12 +24,12 @@ for seq_len in "${seq_lens[@]}"; do
         for dropout_n in "${dropout_ns[@]}"; do
           for e_layer in "${e_layers[@]}"; do
             for batch_size in "${batch_sizes[@]}"; do
-              for local_ep in "${local_eps[@]}"; do
+              for temperature in "${temperatures[@]}"; do
                 log_path="./Results/Fcst/${data_path}/"
                 mkdir -p $log_path
                 timestamp=$(date +"%Y%m%d_%H%M%S")
-                log_file="${log_path}${timestamp}_i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}_lep${local_ep}.log"
-                python train_fed.py \
+                log_file="${log_path}${timestamp}_i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}_temp${temperature}_fed.log"
+                python train_fed_D.py \
                   --root_path $root_path \
                   --data_path $data_path \
                   --device cuda:0 \
@@ -47,12 +47,12 @@ for seq_len in "${seq_lens[@]}"; do
                   --model_path $model_path \
                   --tokenizer_path $tokenizer_path \
                   --num_workers 10 \
-                  --num_users 10 \
+                  --num_users 10\
                   --frac 1.0 \
-                  --local_ep $local_ep \
+                  --temperature $temperature \
+                  --local_ep 1\
                   --d_llm $d_llm 2>&1 | tee -a $log_file
                 done
-              done
             done
           done
         done

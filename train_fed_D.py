@@ -10,6 +10,11 @@ from data_provider.data_loader_emb import Dataset_ETT_hour, Dataset_ETT_minute, 
 from model.TimeKD import Dual
 from utils.kd_loss import KDLoss
 from utils.metrics import MSE, MAE, metric
+import copy
+from fed.sampling import Distribute_data
+from fed.update import LocalUpdate
+from fed.fedAvg import FedAvg
+from fed.fedtools import compute_l2_norm_diff,compute_aggregation_weights
 import faulthandler
 faulthandler.enable()
 torch.cuda.empty_cache()
@@ -53,6 +58,19 @@ def parse_args():
         default="./logs/" + str(time.strftime("%Y-%m-%d-%H:%M:%S")) + "-",
         help="save path",
     )
+    ## federated-learning
+    parser.add_argument('--num_users', type=int, default=100, help="number of users: K")
+    parser.add_argument('--frac', type=float, default=0.1, help="the fraction of clients: C") # 参与训练的客户端比例
+    parser.add_argument('--local_ep', type=int, default=5, help="the number of local epochs: E") # 客户端本地的epochs数量
+    parser.add_argument('--local_bs', type=int, default=10, help="local batch size: B")
+    parser.add_argument('--bs', type=int, default=32, help="test batch size")
+    parser.add_argument("--all_clients", action='store_true', help='aggregation over all clients') # 是否在所有客户端上进行聚合
+    parser.add_argument('--verbose', action='store_true', help='verbose print')
+    parser.add_argument('--threshold', type=int, default=1,help='threshold of aggregation')
+    parser.add_argument('--temperature', 
+                    type=float, 
+                    default=1,
+                    help='aggregation temperature')
     return parser.parse_args()
 
 
@@ -83,7 +101,7 @@ class trainer:
         )
         
         self.optimizer = optim.AdamW(self.model.parameters(), lr=lrate, weight_decay=wdecay)
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=min(epochs, 100), eta_min=1e-8, verbose=True)
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=min(epochs, 100), eta_min=1e-8)
         self.MSE = MSE
         self.MAE = MAE
         self.clip = 5
@@ -115,7 +133,6 @@ class trainer:
         mse = self.MSE(ts_out, y) 
         mae = self.MAE(ts_out, y)
         return loss.item(), mse.item(), mae.item()
-
     def eval(self, x, y, emb):
         self.model.eval()
         with torch.no_grad():
@@ -134,25 +151,20 @@ def load_data(args):
         'ETTm2': Dataset_ETT_minute
         }
     data_class = data_map.get(args.data_path, Dataset_Custom)
-    # if("ETTh1" in args.data_path or "ETTh2" in args.data_path):
-    #     data_class = Dataset_ETT_hour
-    # elif ("ETTm1" in args.data_path or "ETTm2" in args.data_path):
-    #     data_class = Dataset_ETT_minute
-    # else :
-    #     data_class = Dataset_Custom
+    
     train_set = data_class(flag='train', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
     val_set = data_class(flag='val', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
     test_set = data_class(flag='test', scale=True, size=[args.seq_len, 0, args.pred_len], data_path=args.data_path,root_path=args.root_path)
     
     scaler = train_set.scaler
 
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
-    val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
-    test_loader = DataLoader(test_set, batch_size=1, shuffle=False, drop_last=False, num_workers=args.num_workers)
+    # train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
+    # val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
+    # test_loader = DataLoader(test_set, batch_size=1, shuffle=False, drop_last=False, num_workers=args.num_workers)
 
-    return train_loader, val_loader, test_loader, scaler
+    return train_set, val_set, test_set, scaler # 改为返回dataset而不是datasetloader
 
-def seed_it(seed):
+def seed_it(seed):  
     random.seed(seed)
     os.environ["PYTHONSEED"] = str(seed)
     np.random.seed(seed)
@@ -163,10 +175,9 @@ def seed_it(seed):
     torch.manual_seed(seed)
     torch.backends.cudnn.benchmark = False
 
-
 def main():
     args = parse_args()
-    train_loader, val_loader, test_loader,scaler = load_data(args)
+    train_set, val_set, test_set, scaler = load_data(args) # 获取dataset和scaler
     seed_it(args.seed)
     device = torch.device(args.device)
     
@@ -175,7 +186,7 @@ def main():
     epochs_since_best_mse = 0
 
     path = os.path.join(args.save, args.data_path, 
-                        f"{args.pred_len}_{args.channel}_{args.e_layer}_{args.lrate}_{args.dropout_n}_{args.seed}_{args.att_w}/")
+                        f"{args.pred_len}_{args.channel}_{args.e_layer}_{args.lrate}_{args.dropout_n}_{args.seed}_{args.att_w}_fed/")
     if not os.path.exists(path):
         os.makedirs(path)
      
@@ -204,35 +215,70 @@ def main():
         device=device,
         epochs=args.epochs
         )
-
     print("Start training...", flush=True)
+    w_glob = engine.model.state_dict()
+    if(args.all_clients): # 聚合所有的用户，或者只聚合当前epoch训练的用户
+        print("Aggregation over all clients")
+        # w_locals_dict 保存每个用户的state_dict的字典
+        w_locals_dict = {f"client_{i+1}":copy.deepcopy(w_glob) for i in range(args.num_users)} # 拷贝state_dict到每个用户
+        gradient_locals_dict = {f"client_{i+1}":torch.zeros_like(w_glob) for i in range(args.num_users)}
+    client_dataset_dict = Distribute_data(train_set, args.num_users,method="contiguous")# 为用户分配数据
+    data_radio = {client_name: len(data)/len(train_set)  for client_name,data in client_dataset_dict.items()} # client拥有的数据比例
 
-    for i in range(1, args.epochs + 1):
+    for epoch_step in range(1, args.epochs + 1):
         t1 = time.time()
-        train_loss = []
-        train_mse = []
-        train_mae = []
-        
-        for iter, (x, y, emb) in enumerate(train_loader):
-            trainx = torch.Tensor(x).to(device).float()
-            trainy = torch.Tensor(y).to(device).float()
-            emb = torch.Tensor(emb).to(device).float()
-            metrics = engine.train(trainx, trainy, emb)
-            train_loss.append(metrics[0])
-            train_mse.append(metrics[1])
-            train_mae.append(metrics[2])
+        mtrain_loss = 0
+        mtrain_mse = 0
+        mtrain_mae = 0
+        if not args.all_clients:
+            w_locals_dict = {}
+            gradient_locals_dict= {}
+        m = max(int(args.frac * args.num_users), 1) # 几个用户要参与训练
+        client_names = np.random.choice(list(client_dataset_dict.keys()), m, replace=False)
+        # print(client_names)
+        sum_radio = 0
 
+               
+        aggregation_weights = {}
+        for client_name in client_names:
+            local = LocalUpdate(args=args, dataset=client_dataset_dict[client_name]) # 用来训练一个用户
+            w, train_loss,train_mse,train_mae,gradients = local.train(local_model=copy.deepcopy(engine))
+            # delta_norm = compute_l2_norm_diff(w_locals_dict[client_name], w) # 计算w的差的2范数
+            if (True):
+                pass
+                w_locals_dict[client_name] = copy.deepcopy(w)
+                gradient_locals_dict[client_name] = gradients # 梯度
+                mtrain_loss += train_loss * data_radio[client_name]
+                mtrain_mse += train_mse * data_radio[client_name]
+                mtrain_mae += train_mae * data_radio[client_name]
+                sum_radio += data_radio[client_name]
+        mtrain_loss /= sum_radio
+        mtrain_mse /= sum_radio
+        mtrain_mae /= sum_radio
+        aggregation_weights = compute_aggregation_weights(gradient_locals_dict,temperature=args.temperature)
+        print("aggregation weights",aggregation_weights.items())
+        radio = {k:v*aggregation_weights[k] for k,v in data_radio.items() if k in aggregation_weights}
+        # 归一化
+        sum_radio = sum(radio.values())
+        radio = {k:v/sum_radio for k,v in radio.items()}
+        # 更新全局权重
+        w_glob = FedAvg(w_locals_dict,radio)
+        # 将全局权重复制到net中
+        engine.model.load_state_dict(w_glob)
+        
         t2 = time.time()
         log = "Epoch: {:03d}, Training Time: {:.4f} secs"
-        print(log.format(i, (t2 - t1)))
+        print(log.format(epoch_step, (t2 - t1)))
         train_time.append(t2 - t1)
+
 
         # Validation
         val_loss = []
         val_mse = []
         val_mae = []
         s1 = time.time()
-
+        val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
+        test_loader = DataLoader(test_set, batch_size=1, shuffle=False, drop_last=False, num_workers=args.num_workers)
         for iter, (x, y, emb) in enumerate(val_loader):
             valx = torch.Tensor(x).to(device).float()
             valy = torch.Tensor(y).to(device).float()
@@ -244,12 +290,9 @@ def main():
 
         s2 = time.time()
         log = "Epoch: {:03d}, Validation Time: {:.4f} secs"
-        print(log.format(i, (s2 - s1)))
+        print(log.format(epoch_step, (s2 - s1)))
         val_time.append(s2 - s1)
 
-        mtrain_loss = np.mean(train_loss)
-        mtrain_mse = np.mean(train_mse)
-        mtrain_mae = np.mean(train_mae)
         mvalid_loss = np.mean(val_loss)
         mvalid_mse = np.mean(val_mse)
         mvalid_mae = np.mean(val_mae)
@@ -259,25 +302,25 @@ def main():
 
         log = "Epoch: {:03d}, Train Loss: {:.4f}, Train MSE: {:.4f}, Train MAE: {:.4f}"
         print(
-            log.format(i, mtrain_loss, mtrain_mse, mtrain_mae),
+            log.format(epoch_step, mtrain_loss, mtrain_mse, mtrain_mae),
             flush=True,
         )
         log = "Epoch: {:03d}, Valid Loss: {:.4f}, Valid MSE: {:.4f}, Valid MAE: {:.4f}"
         print(
-            log.format(i, mvalid_loss, mvalid_mse, mvalid_mae),
+            log.format(epoch_step, mvalid_loss, mvalid_mse, mvalid_mae),
             flush=True,
         )
 
         if mvalid_loss < loss:
             print("###Update tasks appear###")
-            if i <= 10:
+            if epoch_step <= 10:
                 # It is not necessary to print the results of the testset when epoch is less than n, because the model has not yet converged.
                 loss = mvalid_loss
                 torch.save(engine.model.state_dict(), path + "best_model.pth")
-                bestid = i
+                bestid = epoch_step
                 epochs_since_best_mse = 0
                 print("Updating! Valid Loss:{:.4f}".format(mvalid_loss), end=", ")
-                print("epoch: ", i)
+                print("epoch: ", epoch_step)
             else:
                 test_outputs = []
                 test_y = []
@@ -319,8 +362,8 @@ def main():
                     print("Test low! Updating! Test MSE: {:.4f}, Test MAE: {:.4f}".format(np.mean(amse), np.mean(amae)), end=", ")
                     print("Test low! Updating! Valid Loss: {:.4f}".format(mvalid_loss), end=", ")
 
-                    bestid = i
-                    print("epoch: ", i)
+                    bestid = epoch_step
+                    print("epoch: ", epoch_step)
                 else:
                     epochs_since_best_mse += 1
                     print("No update")
@@ -331,7 +374,7 @@ def main():
 
         engine.scheduler.step()
 
-        if epochs_since_best_mse >= args.es_patience and i >= args.epochs//2: # early stop
+        if epochs_since_best_mse >= args.es_patience and epoch_step >= args.epochs//2: # early stop
             break
 
     # Output consumption
@@ -377,7 +420,7 @@ def main():
 
     log = "On average horizons, Test MSE: {:.4f}, Test MAE: {:.4f}"
     print(log.format(np.mean(amse), np.mean(amae)))
-    print("Average Testing Time: {:.4f} secs".format(np.mean(test_time)))
+    # print("Average Testing Time: {:.4f} secs".format(np.mean(test_time)))
 
 if __name__ == "__main__":
     t1 = time.time()

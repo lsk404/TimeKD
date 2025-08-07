@@ -26,8 +26,8 @@ def Distribute_data(dataset, client_nums,method="contiguous"):
         else:
             end_idx = (i + 1) * data_per_client
         sub_dataset = []
-        for i in range(start_idx,end_idx):
-            sub_dataset.append(dataset[i])
+        for j in range(start_idx,end_idx):
+            sub_dataset.append(dataset[j])
         client_data_dict[f"client_{i+1}"] = sub_dataset
         start_idx = end_idx
     return client_data_dict

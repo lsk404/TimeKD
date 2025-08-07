@@ -97,7 +97,7 @@ class trainer:
         )
         
         self.optimizer = optim.AdamW(self.model.parameters(), lr=lrate, weight_decay=wdecay)
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=min(epochs, 100), eta_min=1e-8, verbose=True)
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=min(epochs, 100), eta_min=1e-8)
         self.MSE = MSE
         self.MAE = MAE
         self.clip = 5
@@ -230,20 +230,19 @@ def main():
             w_locals_dict = {}
         m = max(int(args.frac * args.num_users), 1) # 几个用户要参与训练
         client_names = np.random.choice(list(client_dataset_dict.keys()), m, replace=False)
-        print(client_names)
         sum_radio = 0
 
         for client_name in client_names:
             local = LocalUpdate(args=args, dataset=client_dataset_dict[client_name]) # 用来训练一个用户
-            w, train_loss,train_mse,train_mae = local.train(local_model=copy.deepcopy(engine))
-            delta_norm = compute_l2_norm_diff(w_locals_dict[client_name], w) # 计算w的差的2范数
-            w_locals_dict[client_name] = copy.deepcopy(w)
-            if (True): # TODO 添加临界条件,将下面的更新loss放到这里面
+            w, train_loss,train_mse,train_mae,gradient = local.train(local_model=copy.deepcopy(engine))
+            # delta_norm = compute_l2_norm_diff(w_locals_dict[client_name], w) # 计算w的差的2范数
+            if (True):
                 pass
-            mtrain_loss += train_loss * data_radio[client_name]
-            mtrain_mse += train_mse * data_radio[client_name]
-            mtrain_mae += train_mae * data_radio[client_name]
-            sum_radio += data_radio[client_name]
+                w_locals_dict[client_name] = copy.deepcopy(w)
+                mtrain_loss += train_loss * data_radio[client_name]
+                mtrain_mse += train_mse * data_radio[client_name]
+                mtrain_mae += train_mae * data_radio[client_name]
+                sum_radio += data_radio[client_name]
         mtrain_loss /= sum_radio
         mtrain_mse /= sum_radio
         mtrain_mae /= sum_radio
@@ -406,7 +405,6 @@ def main():
 
     log = "On average horizons, Test MSE: {:.4f}, Test MAE: {:.4f}"
     print(log.format(np.mean(amse), np.mean(amae)))
-    print("Average Testing Time: {:.4f} secs".format(np.mean(test_time)))
 
 if __name__ == "__main__":
     t1 = time.time()
