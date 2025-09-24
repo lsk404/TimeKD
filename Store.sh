@@ -1,15 +1,15 @@
 #!/bin/bash
 export PYTHONPATH=/path/to/project_root:$PYTHONPATH
-export CUDA_LAUNCH_BLOCKING=1
 
-root_path="/remote-home/data/ETT-small/"
-data_paths=("ETTh1")
+root_path="./data/Exchange/"
+# data_paths=("ETTh1" "ETTh2" "ETTm1" "ETTm2")
+data_paths=("exchange_rate")
 divides=("train" "val" "test") 
-output_len_values=(36 48 96)
+output_len_values=(24 36 48)
 
 # 其他参数
 device="cuda:0"
-num_nodes=7
+num_nodes=8
 input_len=96
 model_path="./gpt2_model"
 tokenizer_path="./gpt2_tokenizer"
@@ -26,7 +26,7 @@ for data_path in "${data_paths[@]}"; do
     for output_len in "${output_len_values[@]}"; do
       timestamp=$(date +"%Y%m%d_%H%M%S")
       log_file="./log/${timestamp}_${data_path}_${output_len}_${divide}.log"
-      echo "python store_emb.py \
+      echo "/root/anaconda3/envs/timekd/bin/python store_emb.py \
       --root_path '$root_path' \
       --data_path '$data_path' \
       --divide '$divide' \

@@ -6,7 +6,6 @@ import argparse
 from torch.utils.data import DataLoader
 from data_provider.data_loader_save import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom
 from clm import GenPromptEmb
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--device", type=str, default="cuda:7")
