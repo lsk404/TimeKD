@@ -5,7 +5,7 @@ export CUDA_VISIBLE_DEVICES=0
 seq_lens=(96)
 pred_lens=(24)
 d_llm=(768)
-learning_rates=(5e-4 5e-5 1e-5)
+learning_rates=(1e-4)
 channels=(32)
 e_layers=(2)
 dropout_ns=(0.5)
@@ -17,8 +17,8 @@ tokenizer_path="./gpt2_tokenizer"
 root_path="./data/ETT-small/"
 # data_paths=("ETTh1" "ETTh2" "ETTm1" "ETTm2")
 data_paths=("ETTh1")
-# data_paths=("exchange_rate")
-epochs=(100)
+alphas=(0.90 0.95 0.99 1.0)
+epochs=(300)
 commands_file=$(mktemp)
 for seq_len in "${seq_lens[@]}"; do 
   for pred_len in "${pred_lens[@]}"; do
@@ -29,12 +29,13 @@ for seq_len in "${seq_lens[@]}"; do
             for batch_size in "${batch_sizes[@]}"; do
               for temperature in "${temperatures[@]}"; do
                 for data_path in "${data_paths[@]}"; do
+                  for alpha in "${alphas[@]}"; do
                   log_path="./Results/Fcst/${data_path}/"
                   mkdir -p $log_path
                   timestamp=$(date +"%Y%m%d_%H%M%S")
-                  log_file="${log_path}${timestamp}_i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}_temp${temperature}_fed.log"
+                  log_file="${log_path}${timestamp}i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}_temp${temperature}_alpha${alpha}.log"
 cat >> "$commands_file" << EOF
-python train_fed_D.py \
+python train_fed_local_server.py \
   --root_path $root_path \
   --data_path $data_path \
   --device cuda:0 \
@@ -56,9 +57,10 @@ python train_fed_D.py \
   --frac 1.0 \
   --temperature $temperature \
   --local_ep 5\
+  --alpha $alpha\
   --d_llm $d_llm 2>&1 | tee -a $log_file
 EOF
-
+                    done
                   done
                 done
             done

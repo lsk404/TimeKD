@@ -10,7 +10,6 @@ import random
 from sklearn import metrics
 import time
 
-
 class LocalDataset(Dataset):
     def __init__(self, dataset):
         self.dataset = dataset
@@ -24,13 +23,15 @@ class LocalDataset(Dataset):
 
 
 class LocalUpdate(object):
-    def __init__(self, args, dataset=None, idxs=None):
+    def __init__(self, args, dataset=None, idxs=None,shared_dataLoader=None):
         self.args = args
         self.loss_func = nn.CrossEntropyLoss()
         self.selected_clients = []
         self.dataLoader_train = DataLoader(LocalDataset(dataset), batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
+        self.shared_dataLoader = shared_dataLoader
 
-    def train(self, local_model):
+    def train(self, local_model,global_model): # local_model belongs to class 'trainer'
+
         # train and update
         epoch_loss = []
         epoch_mse = []
@@ -45,7 +46,7 @@ class LocalUpdate(object):
                 trainx = torch.Tensor(x).to(device).float()
                 trainy = torch.Tensor(y).to(device).float()
                 emb = torch.Tensor(emb).to(device).float()
-                metrics = local_model.train(trainx, trainy, emb)
+                metrics = local_model.train(trainx, trainy, emb,self.shared_dataLoader,global_model)
                 if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\tmse:{:.6f}\tmae:{:.6f}'.format(
                             iter, batch_idx * len(x), len(self.dataLoader_train.dataset),

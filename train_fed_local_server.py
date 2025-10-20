@@ -6,7 +6,6 @@ import time
 import os
 import random
 from torch.utils.data import DataLoader
-import torch.nn as nn
 from data_provider.data_loader_emb import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom
 from model.TimeKD import Dual
 from utils.kd_loss import KDLoss
@@ -17,7 +16,6 @@ from fed.update import LocalUpdate
 from fed.fedAvg import FedAvg
 from fed.fedtools import compute_l2_norm_diff,compute_aggregation_weights
 import faulthandler
-from data_provider.shared_data import get_shared_data
 faulthandler.enable()
 torch.cuda.empty_cache()
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:150"
@@ -61,7 +59,7 @@ def parse_args():
         help="save path",
     )
     ## federated-learning
-    parser.add_argument('--num_users', type=int, default=10, help="number of users: K")
+    parser.add_argument('--num_users', type=int, default=30, help="number of users: K")
     parser.add_argument('--frac', type=float, default=1, help="the fraction of clients: C") # 参与训练的客户端比例
     parser.add_argument('--local_ep', type=int, default=5, help="the number of local epochs: E") # 客户端本地的epochs数量
     parser.add_argument('--local_bs', type=int, default=10, help="local batch size: B")
@@ -73,11 +71,9 @@ def parse_args():
                     type=float, 
                     default=1,
                     help='aggregation temperature')
-    
-    ### shared data 
-    parser.add_argument('--vae_train_epochs', type=int, default=1)
-    parser.add_argument('--vae_local_epochs', type=int, default=10)
-    parser.add_argument('--shared_size', type=int, default=96)
+    # client upload
+    parser.add_argument('--alpha',type=float,default=0.95)
+    parser.add_argument('--beta',type=float,default=1.0)
     return parser.parse_args()
 
 
@@ -119,45 +115,20 @@ class trainer:
         self.fcst_loss = 'smooth_l1'
         self.recon_loss = 'smooth_l1'
         self.att_loss = 'smooth_l1'   
-        self.consistency_loss = "mse"
         self.fcst_w = 1
         self.recon_w = 0.5
         self.feature_w = 0.1     
         self.att_w = 0.01
-        self.consis_loss_coef = 10
-        self.criterion = KDLoss(self.feature_loss, self.fcst_loss, self.recon_loss, self.att_loss, self.feature_w,  self.fcst_w,  self.recon_w,  self.att_w,self.consis_loss_coef)
-        self.shared_criterion = nn.MSELoss()
+        self.criterion = KDLoss(self.feature_loss, self.fcst_loss, self.recon_loss, self.att_loss,  self.feature_w,  self.fcst_w,  self.recon_w,  self.att_w)
 
         print("The number of parameters: {}".format(self.model.param_num()))
         print(self.model)
 
-    def train(self, x, y, emb,shared_dataLoader,global_model):
+    def train(self, x, y, emb):
         self.model.train()
         self.optimizer.zero_grad()
         ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att = self.model(x, emb)
-        
-        consistency_loss = 0.0
-        count = 0
-        
-        for shared_batch_x,shared_batch_emb in shared_dataLoader:
-            # print("-------",shared_batch_x.shape)
-            count+=1
-            
-            shared_batch_x = shared_batch_x.float().to(self.device)
-            shared_batch_emb = shared_batch_emb.float().to(self.device)
-            
-            _, _, shared_outputs, _, _, _ = self.model(shared_batch_x,shared_batch_emb)
-            _, _, global_shared_outputs, _, _, _ = global_model(shared_batch_x,shared_batch_emb)
-                # shared_outputs = shared_outputs[:, :, f_dim:]
-                # global_output = global_output[:, :, f_dim:]
-            # shared_f_dim = -1 if self.args.features == 'MS' else 0
-            # shared_outputs = shared_outputs[:, :, shared_f_dim:]
-            consistency_loss += self.shared_criterion(shared_outputs, global_shared_outputs)
-        consistency_loss/=count
-
-        loss = self.criterion(ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att, y,consistency_loss)
-
-
+        loss = self.criterion(ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att, y)
         loss.backward()
         if self.clip is not None:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip) 
@@ -169,7 +140,7 @@ class trainer:
         self.model.eval()
         with torch.no_grad():
             ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att = self.model(x, emb)
-            loss = self.criterion(ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att, y,0)
+            loss = self.criterion(ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att, y)
             mse = self.MSE(ts_out, y)
             mae = self.MAE(ts_out, y)
         return loss.item(), mse.item(), mae.item()
@@ -254,9 +225,10 @@ def main():
         w_locals_dict = {f"client_{i+1}":copy.deepcopy(w_glob) for i in range(args.num_users)} # 拷贝state_dict到每个用户
         gradient_locals_dict = {f"client_{i+1}":torch.zeros_like(w_glob) for i in range(args.num_users)}
     client_dataset_dict = Distribute_data(train_set, args.num_users,method="contiguous")# 为用户分配数据
-    shared_dataLoader = get_shared_data(client_dataset_dict,args)
     data_radio = {client_name: len(data)/len(train_set)  for client_name,data in client_dataset_dict.items()} # client拥有的数据比例
-
+    
+    delta_w_history = dict()
+    last_w = dict()
     for epoch_step in range(1, args.epochs + 1):
         t1 = time.time()
         mtrain_loss = 0
@@ -268,21 +240,32 @@ def main():
         m = max(int(args.frac * args.num_users), 1) # 几个用户要参与训练
         client_names = np.random.choice(list(client_dataset_dict.keys()), m, replace=False)
         # print(client_names)
-        sum_radio = 0
+        sum_radio = 1e-4
 
+               
         aggregation_weights = {}
         for client_name in client_names:
-            local = LocalUpdate(args=args, dataset=client_dataset_dict[client_name],shared_dataLoader=shared_dataLoader) # 用来训练一个用户
-            w, train_loss,train_mse,train_mae,gradients = local.train(local_model=copy.deepcopy(engine),global_model=engine.model)
-            # delta_norm = compute_l2_norm_diff(w_locals_dict[client_name], w) # 计算w的差的2范数
-            if (True):
-                pass
-                w_locals_dict[client_name] = copy.deepcopy(w)
+            local = LocalUpdate(args=args, dataset=client_dataset_dict[client_name]) # 用来训练一个用户
+            w, train_loss,train_mse,train_mae,gradients = local.train(local_model=copy.deepcopy(engine))
+            if((client_name not in last_w) or
+                (client_name not in delta_w_history)
+                ):
+                threshold = 0.0
+                delta_norm = 0.0
+                delta_w_history[client_name] = []
+            else :
+                delta_norm = compute_l2_norm_diff(last_w[client_name], w).item() # 计算w的差的2范数
+                threshold = args.alpha * np.mean(delta_w_history[client_name]) + args.beta * np.std(delta_w_history[client_name])
+            w_locals_dict[client_name] = copy.deepcopy(w)
+            last_w[client_name] = copy.deepcopy(w)
+            if (delta_norm >= threshold):
                 gradient_locals_dict[client_name] = gradients # 梯度
                 mtrain_loss += train_loss * data_radio[client_name]
                 mtrain_mse += train_mse * data_radio[client_name]
                 mtrain_mae += train_mae * data_radio[client_name]
                 sum_radio += data_radio[client_name]
+            print(client_name,"threshold:",threshold,"delta_norm",delta_norm)
+            delta_w_history[client_name].append(delta_norm)
         mtrain_loss /= sum_radio
         mtrain_mse /= sum_radio
         mtrain_mae /= sum_radio
