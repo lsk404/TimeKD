@@ -30,8 +30,8 @@ class LocalUpdate(object):
         self.dataLoader_train = DataLoader(LocalDataset(dataset), batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
         self.shared_dataLoader = shared_dataLoader
 
-    def train(self, local_model,global_model): # local_model belongs to class 'trainer'
-
+    def train(self, local_model,global_shared_result): # local_model belongs to class 'trainer'
+        # global_shared_result: A dictionary storing the output results of the global model on shared data
         # train and update
         epoch_loss = []
         epoch_mse = []
@@ -46,7 +46,7 @@ class LocalUpdate(object):
                 trainx = torch.Tensor(x).to(device).float()
                 trainy = torch.Tensor(y).to(device).float()
                 emb = torch.Tensor(emb).to(device).float()
-                metrics = local_model.train(trainx, trainy, emb,self.shared_dataLoader,global_model)
+                metrics = local_model.train(trainx, trainy, emb,self.shared_dataLoader,global_shared_result)
                 if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\tmse:{:.6f}\tmae:{:.6f}'.format(
                             iter, batch_idx * len(x), len(self.dataLoader_train.dataset),

@@ -124,47 +124,68 @@ class trainer:
         self.recon_w = 0.5
         self.feature_w = 0.1     
         self.att_w = 0.01
-        self.consis_loss_coef = 10
-        self.criterion = KDLoss(self.feature_loss, self.fcst_loss, self.recon_loss, self.att_loss, self.feature_w,  self.fcst_w,  self.recon_w,  self.att_w,self.consis_loss_coef)
+        self.consis_loss_coef = 200
+        self.criterion = KDLoss(self.feature_loss, self.fcst_loss, self.recon_loss, self.att_loss, self.feature_w,  self.fcst_w,  self.recon_w,  self.att_w)
         self.shared_criterion = nn.MSELoss()
 
         print("The number of parameters: {}".format(self.model.param_num()))
         print(self.model)
 
-    def train(self, x, y, emb,shared_dataLoader,global_model):
+    
+    def train(self, x, y, emb, shared_dataLoader, global_shared_result):
         self.model.train()
         self.optimizer.zero_grad()
+
+        # 1. 主任务前向传播 和 loss (只做一次)
         ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att = self.model(x, emb)
-        
-        consistency_loss = 0.0
-        count = 0
-        
-        for shared_batch_x,shared_batch_emb in shared_dataLoader:
-            # print("-------",shared_batch_x.shape)
-            count+=1
-            
+        main_loss = self.criterion(ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att, y)
+
+        total_consistency_loss = 0.0
+        batch_count = 0
+
+        # 2. 循环计算 consistency loss
+        for idx, shared_batch_x, shared_batch_emb in shared_dataLoader:
             shared_batch_x = shared_batch_x.float().to(self.device)
             shared_batch_emb = shared_batch_emb.float().to(self.device)
-            
-            _, _, shared_outputs, _, _, _ = self.model(shared_batch_x,shared_batch_emb)
-            _, _, global_shared_outputs, _, _, _ = global_model(shared_batch_x,shared_batch_emb)
-                # shared_outputs = shared_outputs[:, :, f_dim:]
-                # global_output = global_output[:, :, f_dim:]
-            # shared_f_dim = -1 if self.args.features == 'MS' else 0
-            # shared_outputs = shared_outputs[:, :, shared_f_dim:]
-            consistency_loss += self.shared_criterion(shared_outputs, global_shared_outputs)
-        consistency_loss/=count
 
-        loss = self.criterion(ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att, y,consistency_loss)
+            _, _, shared_outputs, _, _, _ = self.model(shared_batch_x, shared_batch_emb)
 
+            selected_outputs = []
+            for i in range(idx.size(0)):
+                sample_idx = idx[i].item()
+                if sample_idx in global_shared_result:
+                    selected_outputs.append(global_shared_result[sample_idx].to(self.device))
+                else:
+                    raise KeyError(f"Sample index {sample_idx} not found in global_shared_result")
 
-        loss.backward()
+            global_shared_outputs = torch.stack(selected_outputs, dim=0).to(self.device)
+
+            # 累积 consistency loss
+            consistency_loss = self.shared_criterion(shared_outputs, global_shared_outputs)
+            total_consistency_loss += consistency_loss
+            batch_count += 1
+        
+        # 3. 组合总 loss
+        # (你可能需要对 total_consistency_loss 进行平均)
+        if batch_count > 0:
+            avg_consistency_loss = total_consistency_loss / batch_count
+            total_loss = main_loss + self.consis_loss_coef * avg_consistency_loss
+        else:
+            total_loss = main_loss
+
+        # 4. 反向传播 (只做一次)
+        total_loss.backward()  
+        
+        # 5. 更新
+        self.optimizer.step()
+        self.optimizer.zero_grad()
+
         if self.clip is not None:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip) 
         self.optimizer.step() 
         mse = self.MSE(ts_out, y) 
         mae = self.MAE(ts_out, y)
-        return loss.item(), mse.item(), mae.item()
+        return total_loss.item(), mse.item(), mae.item()
     def eval(self, x, y, emb):
         self.model.eval()
         with torch.no_grad():
@@ -271,9 +292,26 @@ def main():
         sum_radio = 0
 
         aggregation_weights = {}
+        global_shared_result = {}
+
+        with torch.no_grad():
+            for idx, shared_batch_x, shared_batch_emb in shared_dataLoader:
+                shared_batch_x = shared_batch_x.float().to(device)
+                shared_batch_emb = shared_batch_emb.float().to(device)
+                
+                _, _, global_shared_outputs, _, _, _ = engine.model(shared_batch_x, shared_batch_emb)
+                
+                # detach 并确保在目标 device 上
+                global_shared_outputs = global_shared_outputs.detach().to(device)
+                
+                for i in range(idx.size(0)):
+                    sample_idx = idx[i].item()
+                    sample_output = global_shared_outputs[i]
+                    global_shared_result[sample_idx] = sample_output
+
         for client_name in client_names:
             local = LocalUpdate(args=args, dataset=client_dataset_dict[client_name],shared_dataLoader=shared_dataLoader) # 用来训练一个用户
-            w, train_loss,train_mse,train_mae,gradients = local.train(local_model=copy.deepcopy(engine),global_model=engine.model)
+            w, train_loss,train_mse,train_mae,gradients = local.train(local_model=copy.deepcopy(engine),global_shared_result=global_shared_result)
             # delta_norm = compute_l2_norm_diff(w_locals_dict[client_name], w) # 计算w的差的2范数
             if (True):
                 pass

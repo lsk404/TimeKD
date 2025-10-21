@@ -116,7 +116,7 @@ def get_shared_data(train_datasets,args):
                 return len(self.x_data)
 
             def __getitem__(self, idx):
-                return self.x_data[idx], self.emb_data[idx]  # 返回元组
+                return idx,self.x_data[idx], self.emb_data[idx]  # 返回元组
 
         # 实例化 dataset 并创建 dataloader
         shared_dataset = SharedPairDataset(shared_dataset_x_tensor, shared_dataset_emb_tensor)
