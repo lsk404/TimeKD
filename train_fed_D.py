@@ -190,7 +190,7 @@ class trainer:
         self.model.eval()
         with torch.no_grad():
             ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att = self.model(x, emb)
-            loss = self.criterion(ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att, y,0)
+            loss = self.criterion(ts_enc, prompt_enc, ts_out, prompt_out, ts_att, prompt_att, y)
             mse = self.MSE(ts_out, y)
             mae = self.MAE(ts_out, y)
         return loss.item(), mse.item(), mae.item()
