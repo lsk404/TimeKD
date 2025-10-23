@@ -177,8 +177,6 @@ class trainer:
         total_loss.backward()  
         
         # 5. 更新
-        self.optimizer.step()
-        self.optimizer.zero_grad()
 
         if self.clip is not None:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip) 
@@ -326,6 +324,7 @@ def main():
         mtrain_mae /= sum_radio
         aggregation_weights = compute_aggregation_weights(gradient_locals_dict,temperature=args.temperature)
         print("aggregation weights",aggregation_weights.items())
+        # print("gradient",gradient_locals_dict)
         radio = {k:v*aggregation_weights[k] for k,v in data_radio.items() if k in aggregation_weights}
         # 归一化
         sum_radio = sum(radio.values())
