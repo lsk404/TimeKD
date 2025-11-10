@@ -64,8 +64,6 @@ def parse_args():
     parser.add_argument('--num_users', type=int, default=10, help="number of users: K")
     parser.add_argument('--frac', type=float, default=1, help="the fraction of clients: C") # 参与训练的客户端比例
     parser.add_argument('--local_ep', type=int, default=5, help="the number of local epochs: E") # 客户端本地的epochs数量
-    parser.add_argument('--local_bs', type=int, default=10, help="local batch size: B")
-    parser.add_argument('--bs', type=int, default=32, help="test batch size")
     parser.add_argument("--all_clients", action='store_true', help='aggregation over all clients') # 是否在所有客户端上进行聚合
     parser.add_argument('--verbose', action='store_true', help='verbose print')
     parser.add_argument('--threshold', type=int, default=1,help='threshold of aggregation')
@@ -73,6 +71,7 @@ def parse_args():
                     type=float, 
                     default=1,
                     help='aggregation temperature')
+    parser.add_argument('--local_data_frac', type=float, default=0.9,help='fraction of local data used for training at each client')
     
     ### shared data 
     parser.add_argument('--vae_train_epochs', type=int, default=1)
@@ -274,6 +273,7 @@ def main():
         gradient_locals_dict = {f"client_{i+1}":torch.zeros_like(w_glob) for i in range(args.num_users)}
     client_dataset_dict = Distribute_data(train_set, args.num_users,method="contiguous")# 为用户分配数据
     shared_dataLoader = get_shared_data(client_dataset_dict,args)
+
     data_radio = {client_name: len(data)/len(train_set)  for client_name,data in client_dataset_dict.items()} # client拥有的数据比例
 
     for epoch_step in range(1, args.epochs + 1):
@@ -338,7 +338,7 @@ def main():
         log = "Epoch: {:03d}, Training Time: {:.4f} secs"
         print(log.format(epoch_step, (t2 - t1)))
         train_time.append(t2 - t1)
-
+    
 
         # Validation
         val_loss = []
@@ -426,6 +426,8 @@ def main():
                     test_log = np.mean(amse)
                     loss = mvalid_loss
                     torch.save(engine.model.state_dict(), path + "best_model.pth")
+                    for client_name,weight in w_locals_dict.items():
+                        torch.save(weight,path+f"{client_name}.pth")
                     epochs_since_best_mse = 0
                     print("Test low! Updating! Test MSE: {:.4f}, Test MAE: {:.4f}".format(np.mean(amse), np.mean(amae)), end=", ")
                     print("Test low! Updating! Valid Loss: {:.4f}".format(mvalid_loss), end=", ")

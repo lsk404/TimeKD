@@ -4,7 +4,7 @@
 
 import torch
 from torch import nn, autograd
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset,Subset
 import numpy as np
 import random
 from sklearn import metrics
@@ -20,6 +20,17 @@ class LocalDataset(Dataset):
     def __getitem__(self, index):
         (x, y, emb) = self.dataset[index]
         return (x, y, emb)
+    def get_fractional_dataloader(self, args,shuffle=True):
+        frac = args.local_data_frac
+        batch_size = args.batch_size
+        num_workers = args.num_workers
+        if frac >= 1.0:
+            indices = list(range(len(self.dataset)))
+        else:
+            num_samples = int(frac * len(self.dataset))
+            indices = random.sample(range(len(self.dataset)), num_samples)
+        subset = Subset(self.dataset, indices)
+        return DataLoader(subset, batch_size=batch_size, shuffle=shuffle, drop_last=True, num_workers=num_workers)
 
 
 class LocalUpdate(object):
@@ -27,12 +38,13 @@ class LocalUpdate(object):
         self.args = args
         self.loss_func = nn.CrossEntropyLoss()
         self.selected_clients = []
-        self.dataLoader_train = DataLoader(LocalDataset(dataset), batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
+        self.dataset = LocalDataset(dataset)
         self.shared_dataLoader = shared_dataLoader
 
     def train(self, local_model,global_shared_result): # local_model belongs to class 'trainer'
-        # global_shared_result: A dictionary storing the output results of the global model on shared data
+        # global_shared_result: A Dictionary storing the output results of the global model on shared data
         # train and update
+        self.dataLoader_train = self.dataset.get_fractional_dataloader(self.args)
         epoch_loss = []
         epoch_mse = []
         epoch_mae = []

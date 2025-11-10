@@ -77,7 +77,9 @@ class Dual(nn.Module):
 
     def forward(self, x, prompt_emb):
         if prompt_emb is not None:
-            prompt_emb = prompt_emb.float().squeeze() # B, N, E
+            prompt_emb = prompt_emb.float()
+            while prompt_emb.dim() > 3 and prompt_emb.shape[-1] == 1: # B, N, E
+                prompt_emb = prompt_emb.squeeze(-1)
 
             # TS Input
             ts_data = x.float() # B L N

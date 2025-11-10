@@ -1,4 +1,5 @@
 from data_provider.shared_construct import VAE,vae_loss,manual_info_loss,wasserstein_distance
+from sklearn.neighbors import KernelDensity
 import torch.nn as nn
 from torch import optim
 import time
@@ -82,7 +83,7 @@ def get_shared_data(train_datasets,args):
     num_samples = args.shared_size
 
     with torch.no_grad():
-        for client_id, data_loader in train_datasets.items():
+        for client_id, dataset in train_datasets.items():
             latent_samples_x = torch.randn(num_samples,lantent_dim).to(args.device)
             latent_samples_emb = torch.randn(num_samples,lantent_dim).to(args.device)
             
@@ -122,20 +123,72 @@ def get_shared_data(train_datasets,args):
         shared_dataset = SharedPairDataset(shared_dataset_x_tensor, shared_dataset_emb_tensor)
         shared_dataset_loader = data_utils.DataLoader(
             shared_dataset,
-            batch_size=args.local_bs,
+            batch_size=args.batch_size,
             shuffle=True
         )
 
     print(f"Shared data shape: x {shared_dataset_x_tensor.shape}, emb {shared_dataset_emb_tensor.shape}")
-    # 示例输出: Shared data shape: x torch.Size([1000, 38]), emb torch.Size([1000, 64])
 
-    total_size_bytes = shared_dataset_x_tensor.numel() * shared_dataset_x_tensor.element_size() + \
-                    shared_dataset_emb_tensor.numel() * shared_dataset_emb_tensor.element_size()
-    total_size_mb = total_size_bytes / (1024 ** 2)
-    print(f"Total size of shared_dataset: {total_size_mb:.2f} MB")
 
-    print('cost time:', time.time() - shared_dataset_start_time)
-    torch.cuda.empty_cache()
+
+    # from plot.KDE import plot_kde_comparison_single_feature
+
+    # total_size_bytes = shared_dataset_x_tensor.numel() * shared_dataset_x_tensor.element_size() + \
+    #                 shared_dataset_emb_tensor.numel() * shared_dataset_emb_tensor.element_size()
+    # total_size_mb = total_size_bytes / (1024 ** 2)
+    # print(f"Total size of shared_dataset: {total_size_mb:.2f} MB")
+
+    # print('cost time:', time.time() - shared_dataset_start_time)
+    # torch.cuda.empty_cache()
+
+    # ## KDE figure of Text and TS
+    # # 提取真实数据
+    # real_TS_list = []
+    # real_Text_list = []
+    # for client_id, client_dataset in train_datasets.items():
+    #     data_loader = DataLoader(LocalDataset(client_dataset), batch_size=args.batch_size, shuffle=False, drop_last=True, num_workers=args.num_workers)
+    #     for i, (batch_x, batch_y, emb) in enumerate(data_loader):
+    #         real_TS_list.append(batch_x)
+    #         real_Text_list.append(emb)
+
+    # real_TS_flat = np.vstack(real_TS_list).reshape(-1, original_dim)  # shape: [B*L*, N]
+    # real_Text_flat = np.vstack(real_Text_list).reshape(-1, d_llm)  # shape: [B, N]
+    # synth_TS_flat = shared_dataset_x_tensor.cpu().numpy().reshape(-1, original_dim)
+    # synth_Text_flat = shared_dataset_emb_tensor.cpu().numpy().reshape(-1,d_llm)
+
+    # min_TS_val = np.min(real_TS_flat, axis=0)
+    # max_TS_val = np.max(real_TS_flat, axis=0)
+    # min_Text_val = np.min(real_Text_flat, axis=0)
+    # max_Text_val = np.max(real_Text_flat, axis=0)
+
+    # range_TS_val = max_TS_val - min_TS_val
+    # range_TS_val[range_TS_val == 0] = 1.
+    # range_Text_val = max_Text_val - min_Text_val
+    # range_Text_val[range_Text_val == 0] = 1.
+
+    # real_TS_flat = (real_TS_flat - min_TS_val) / range_TS_val
+    # real_Text_flat = (real_Text_flat - min_Text_val) / range_Text_val
+
+    # np.save("./npy/real_TS_flat.npy",real_TS_flat)
+    # np.save("./npy/real_Text_flat.npy",real_Text_flat)
+    # np.save("./npy/synth_TS_flat.npy",synth_TS_flat)
+    # np.save("./npy/synth_Text_flat.npy",synth_Text_flat)
+    # for i in range(original_dim):
+    #     # 调用函数，生成折线图
+    #     plot_kde_comparison_single_feature(
+    #         real_data=real_TS_flat,
+    #         synth_data=synth_TS_flat,
+    #         feature_idx=i,
+    #         save_path=f"./Results/plot_res/KDE/TS_f{i}.png"  # 保存图像
+    #     )
+    # for i in range(10):
+    #     # 调用函数，生成折线图
+    #     plot_kde_comparison_single_feature(
+    #         real_data=real_Text_flat,
+    #         synth_data=synth_Text_flat,
+    #         feature_idx=i,
+    #         save_path=f"./Results/plot_res/KDE/Text_f{i}.png"  # 保存图像
+    #     )
 
     return shared_dataset_loader
     

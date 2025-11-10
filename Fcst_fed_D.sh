@@ -1,24 +1,28 @@
 #!/bin/bash
-export PYTHONPATH=/path/to/project_root:$PYTHONPATH
+# export PYTHONPATH=/path/to/project_root:$PYTHONPATH
 export CUDA_LAUNCH_BLOCKING=1
 export CUDA_VISIBLE_DEVICES=0 
 seq_lens=(96)
 pred_lens=(24)
 d_llm=(768)
 learning_rates=(1e-4)
-channels=(32)
+channels=(48)
 e_layers=(2)
-dropout_ns=(0.5)
+dropout_ns=(0.2 0.8 1.0)
 batch_sizes=(16)
-temperatures=(0.7)
+temperatures=(0.8)
 # model_name="gpt2"
 model_path="./gpt2_model"
 tokenizer_path="./gpt2_tokenizer"
-root_path="./data/ETT-small/"
+# root_path="./data/Exchange/"
+root_path="./data/ETT-small"
 # data_paths=("ETTh1" "ETTh2" "ETTm1" "ETTm2")
 data_paths=("ETTh1")
+local_eps=(5)
+local_data_fracs=(0.8)
+fracs=(0.4)
 # data_paths=("exchange_rate")
-epochs=(100)
+epochs=(200)
 commands_file=$(mktemp)
 for seq_len in "${seq_lens[@]}"; do 
   for pred_len in "${pred_lens[@]}"; do
@@ -29,10 +33,13 @@ for seq_len in "${seq_lens[@]}"; do
             for batch_size in "${batch_sizes[@]}"; do
               for temperature in "${temperatures[@]}"; do
                 for data_path in "${data_paths[@]}"; do
-                  log_path="./Results/Fcst/${data_path}/"
-                  mkdir -p $log_path
-                  timestamp=$(date +"%Y%m%d_%H%M%S")
-                  log_file="${log_path}${timestamp}_i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}_temp${temperature}_fed.log"
+                  for local_ep in "${local_eps[@]}"; do
+                    for local_data_frac in "${local_data_fracs[@]}"; do
+                      for frac in "${fracs[@]}"; do
+                      log_path="./Results/Fcst/${data_path}/"
+                      mkdir -p $log_path
+                      timestamp=$(date +"%Y%m%d_%H%M%S")
+                      log_file="${log_path}${timestamp}_i${seq_len}_o${pred_len}_lr${learning_rate}_c${channel}_el${e_layer}_dn${dropout_n}_bs${batch_size}_e${epochs}_temp${temperature}_lep${local_ep}_ldf${local_data_frac}_frac${frac}.log"
 cat >> "$commands_file" << EOF
 python train_fed_D.py \
   --root_path $root_path \
@@ -53,12 +60,15 @@ python train_fed_D.py \
   --tokenizer_path $tokenizer_path \
   --num_workers 10 \
   --num_users 10\
-  --frac 1.0 \
+  --frac $frac \
   --temperature $temperature \
-  --local_ep 5\
+  --local_ep $local_ep\
+  --local_data_frac $local_data_frac\
   --d_llm $d_llm 2>&1 | tee -a $log_file
 EOF
-
+                        done
+                      done
+                    done
                   done
                 done
             done
@@ -70,6 +80,6 @@ EOF
 done
 
 
-parallel -j 4 --progress < "$commands_file"
+parallel -j 1 --progress < "$commands_file"
 rm "$commands_file"
 echo "All tasks are finished!"
