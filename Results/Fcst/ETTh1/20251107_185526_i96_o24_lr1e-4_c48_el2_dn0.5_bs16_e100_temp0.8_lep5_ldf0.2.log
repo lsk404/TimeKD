@@ -1,0 +1,850 @@
+Namespace(device='cuda:0', root_path='./data/ETT-small', data_path='ETTh1', channel=48, num_nodes=7, seq_len=96, pred_len=24, batch_size=16, lrate=0.0001, dropout_n=0.5, d_llm=768, e_layer=2, head=4, model_path='./gpt2_model', tokenizer_path='./gpt2_tokenizer', weight_decay=0.001, feature_w=0.01, fcst_w=1, recon_w=0.5, att_w=0.01, num_workers=10, epochs=100, seed=6666, es_patience=50, save='./logs/2025-11-07-18:55:30-', num_users=10, frac=1.0, local_ep=5, all_clients=False, verbose=False, threshold=1, temperature=0.8, local_data_frac=0.2, vae_train_epochs=1, vae_local_epochs=10, shared_size=96)
+The number of parameters: 1274640
+Dual(
+  (normalize_layers): Normalize()
+  (length_to_feature): Linear(in_features=96, out_features=48, bias=True)
+  (token_to_feature): Linear(in_features=768, out_features=48, bias=True)
+  (ts_encoder): Encoder(
+    (attn_layers): ModuleList(
+      (0-1): 2 x EncoderLayer(
+        (attention): AttentionLayer(
+          (inner_attention): FullAttention(
+            (dropout): Dropout(p=0.5, inplace=False)
+          )
+          (query_projection): Linear(in_features=48, out_features=48, bias=True)
+          (key_projection): Linear(in_features=48, out_features=48, bias=True)
+          (value_projection): Linear(in_features=48, out_features=48, bias=True)
+          (out_projection): Linear(in_features=48, out_features=48, bias=True)
+        )
+        (conv1): Conv1d(48, 3072, kernel_size=(1,), stride=(1,))
+        (conv2): Conv1d(3072, 48, kernel_size=(1,), stride=(1,))
+        (norm1): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+        (norm2): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+        (dropout): Dropout(p=0.5, inplace=False)
+      )
+    )
+    (norm): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+  )
+  (prompt_encoder): Encoder(
+    (attn_layers): ModuleList(
+      (0-1): 2 x EncoderLayer(
+        (attention): AttentionLayer(
+          (inner_attention): FullAttention(
+            (dropout): Dropout(p=0.5, inplace=False)
+          )
+          (query_projection): Linear(in_features=48, out_features=48, bias=True)
+          (key_projection): Linear(in_features=48, out_features=48, bias=True)
+          (value_projection): Linear(in_features=48, out_features=48, bias=True)
+          (out_projection): Linear(in_features=48, out_features=48, bias=True)
+        )
+        (conv1): Conv1d(48, 3072, kernel_size=(1,), stride=(1,))
+        (conv2): Conv1d(3072, 48, kernel_size=(1,), stride=(1,))
+        (norm1): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+        (norm2): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+        (dropout): Dropout(p=0.5, inplace=False)
+      )
+    )
+    (norm): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+  )
+  (ts_proj): Linear(in_features=48, out_features=24, bias=True)
+  (prompt_proj): Linear(in_features=48, out_features=24, bias=True)
+)
+Start training...
+Shared data Epoch [10/10],client_1  Loss: 2.2605
+Shared data Epoch [10/10],client_2  Loss: 1.6775
+Shared data Epoch [10/10],client_3  Loss: 1.9845
+Shared data Epoch [10/10],client_4  Loss: 1.7633
+Shared data Epoch [10/10],client_5  Loss: 2.0152
+Shared data Epoch [10/10],client_6  Loss: 2.5672
+Shared data Epoch [10/10],client_7  Loss: 2.2453
+Shared data Epoch [10/10],client_8  Loss: 2.7270
+Shared data Epoch [10/10],client_9  Loss: 2.4447
+Shared data Epoch [10/10],client_10  Loss: 2.6939
+Shared data shape: x torch.Size([10, 96, 7]), emb torch.Size([10, 96, 768])
+aggregation weights dict_items([('client_1', 0.09866067398535061), ('client_4', 0.10071773184168206), ('client_5', 0.10310242017330491), ('client_7', 0.10399757223728992), ('client_3', 0.09697003448272215), ('client_6', 0.09930876603949848), ('client_9', 0.10449038533744567), ('client_8', 0.0966628733654091), ('client_10', 0.09844766361559992), ('client_2', 0.09764187892169716)])
+Epoch: 001, Training Time: 23.5136 secs
+Epoch: 001, Validation Time: 4.4215 secs
+-----------------------
+Epoch: 001, Train Loss: 1.1058, Train MSE: 0.5593, Train MAE: 0.5341
+Epoch: 001, Valid Loss: 0.6640, Valid MSE: 0.9198, Valid MAE: 0.6734
+###Update tasks appear###
+Updating! Valid Loss:0.6640, epoch:  1
+aggregation weights dict_items([('client_8', 0.09931333985841956), ('client_1', 0.10062356709182875), ('client_4', 0.10119968837862878), ('client_6', 0.09604383890458999), ('client_7', 0.10625680091589797), ('client_5', 0.09751948920794647), ('client_9', 0.09922576571686616), ('client_10', 0.09777867497421912), ('client_3', 0.10427288410865024), ('client_2', 0.09776595084295295)])
+Epoch: 002, Training Time: 23.6184 secs
+Epoch: 002, Validation Time: 1.4204 secs
+-----------------------
+Epoch: 002, Train Loss: 0.7273, Train MSE: 0.5071, Train MAE: 0.5095
+Epoch: 002, Valid Loss: 0.6172, Valid MSE: 0.8070, Valid MAE: 0.6297
+###Update tasks appear###
+Updating! Valid Loss:0.6172, epoch:  2
+aggregation weights dict_items([('client_2', 0.104475139223383), ('client_7', 0.10421360426880054), ('client_10', 0.10451068830828433), ('client_8', 0.09923690921055753), ('client_5', 0.10287054478167514), ('client_3', 0.09658330893133171), ('client_1', 0.10027411049929633), ('client_9', 0.09892553548078267), ('client_4', 0.10160331952618068), ('client_6', 0.08730683976970802)])
+Epoch: 003, Training Time: 26.3405 secs
+Epoch: 003, Validation Time: 1.4683 secs
+-----------------------
+Epoch: 003, Train Loss: 0.6617, Train MSE: 0.4692, Train MAE: 0.4893
+Epoch: 003, Valid Loss: 0.5896, Valid MSE: 0.7417, Valid MAE: 0.6024
+###Update tasks appear###
+Updating! Valid Loss:0.5896, epoch:  3
+aggregation weights dict_items([('client_5', 0.10188828002633069), ('client_3', 0.10313705957091382), ('client_4', 0.09177663100733746), ('client_6', 0.10599585843071237), ('client_2', 0.09448090152895867), ('client_9', 0.10413260608635513), ('client_7', 0.10031375912425346), ('client_10', 0.10379005977463351), ('client_1', 0.09780757736999371), ('client_8', 0.09667726708051128)])
+Epoch: 004, Training Time: 26.5656 secs
+Epoch: 004, Validation Time: 1.4271 secs
+-----------------------
+Epoch: 004, Train Loss: 0.6233, Train MSE: 0.4534, Train MAE: 0.4786
+Epoch: 004, Valid Loss: 0.5658, Valid MSE: 0.6964, Valid MAE: 0.5827
+###Update tasks appear###
+Updating! Valid Loss:0.5658, epoch:  4
+aggregation weights dict_items([('client_10', 0.10777285805181522), ('client_5', 0.09924318348693259), ('client_1', 0.09371940117371266), ('client_3', 0.10197163083847259), ('client_2', 0.09976413158212362), ('client_9', 0.09697301149380877), ('client_4', 0.08841215071304197), ('client_6', 0.11383159413257764), ('client_7', 0.10101002845776791), ('client_8', 0.0973020100697469)])
+Epoch: 005, Training Time: 26.7937 secs
+Epoch: 005, Validation Time: 1.5992 secs
+-----------------------
+Epoch: 005, Train Loss: 0.5932, Train MSE: 0.4370, Train MAE: 0.4685
+Epoch: 005, Valid Loss: 0.5504, Valid MSE: 0.6669, Valid MAE: 0.5689
+###Update tasks appear###
+Updating! Valid Loss:0.5504, epoch:  5
+aggregation weights dict_items([('client_1', 0.10319441219433666), ('client_7', 0.1031913762580688), ('client_10', 0.09619559845745287), ('client_2', 0.09327700341145388), ('client_8', 0.10303930255670937), ('client_9', 0.10327704820126724), ('client_6', 0.10629835613346912), ('client_3', 0.09391206515859905), ('client_4', 0.10266348671295653), ('client_5', 0.09495135091568653)])
+Epoch: 006, Training Time: 23.5026 secs
+Epoch: 006, Validation Time: 1.4497 secs
+-----------------------
+Epoch: 006, Train Loss: 0.5744, Train MSE: 0.4318, Train MAE: 0.4662
+Epoch: 006, Valid Loss: 0.5387, Valid MSE: 0.6454, Valid MAE: 0.5587
+###Update tasks appear###
+Updating! Valid Loss:0.5387, epoch:  6
+aggregation weights dict_items([('client_3', 0.10289501040721866), ('client_1', 0.101317954681147), ('client_4', 0.09353703425236279), ('client_8', 0.10591166671023293), ('client_5', 0.1067610878534331), ('client_6', 0.09367630288373836), ('client_2', 0.09907174059495723), ('client_7', 0.09981371772796328), ('client_10', 0.09319755274373936), ('client_9', 0.10381793214520743)])
+Epoch: 007, Training Time: 26.8245 secs
+Epoch: 007, Validation Time: 1.3453 secs
+-----------------------
+Epoch: 007, Train Loss: 0.5509, Train MSE: 0.4138, Train MAE: 0.4562
+Epoch: 007, Valid Loss: 0.5277, Valid MSE: 0.6296, Valid MAE: 0.5514
+###Update tasks appear###
+Updating! Valid Loss:0.5277, epoch:  7
+aggregation weights dict_items([('client_7', 0.10449798899872911), ('client_5', 0.08811567754299773), ('client_9', 0.10248377887537641), ('client_2', 0.10598121087634392), ('client_10', 0.09858007478429652), ('client_1', 0.09360510664818546), ('client_4', 0.09226519952319553), ('client_3', 0.10846872375577844), ('client_6', 0.10063637685014308), ('client_8', 0.1053658621449538)])
+Epoch: 008, Training Time: 26.1472 secs
+Epoch: 008, Validation Time: 1.4966 secs
+-----------------------
+Epoch: 008, Train Loss: 0.5364, Train MSE: 0.4096, Train MAE: 0.4534
+Epoch: 008, Valid Loss: 0.5191, Valid MSE: 0.6182, Valid MAE: 0.5457
+###Update tasks appear###
+Updating! Valid Loss:0.5191, epoch:  8
+aggregation weights dict_items([('client_6', 0.09880059053390808), ('client_8', 0.1075681920040887), ('client_3', 0.09887711820413488), ('client_2', 0.09503176572599724), ('client_7', 0.10000630636315888), ('client_10', 0.09545243709516654), ('client_9', 0.0973306337616084), ('client_4', 0.11136963101853184), ('client_5', 0.10115618968653917), ('client_1', 0.0944071356068662)])
+Epoch: 009, Training Time: 26.3940 secs
+Epoch: 009, Validation Time: 1.5427 secs
+-----------------------
+Epoch: 009, Train Loss: 0.5275, Train MSE: 0.4096, Train MAE: 0.4545
+Epoch: 009, Valid Loss: 0.5106, Valid MSE: 0.6069, Valid MAE: 0.5403
+###Update tasks appear###
+Updating! Valid Loss:0.5106, epoch:  9
+aggregation weights dict_items([('client_5', 0.09766699232116526), ('client_9', 0.09680827648160796), ('client_8', 0.09818717693541368), ('client_3', 0.10112818599364486), ('client_2', 0.10749934046387558), ('client_6', 0.10124057648228978), ('client_7', 0.10472397667957863), ('client_10', 0.09291993669377745), ('client_4', 0.10341850171161458), ('client_1', 0.09640703623703221)])
+Epoch: 010, Training Time: 23.9847 secs
+Epoch: 010, Validation Time: 4.1734 secs
+-----------------------
+Epoch: 010, Train Loss: 0.5155, Train MSE: 0.4053, Train MAE: 0.4513
+Epoch: 010, Valid Loss: 0.5040, Valid MSE: 0.5989, Valid MAE: 0.5365
+###Update tasks appear###
+Updating! Valid Loss:0.5040, epoch:  10
+aggregation weights dict_items([('client_6', 0.10835827982103394), ('client_4', 0.09298824384364508), ('client_3', 0.08020794972028746), ('client_2', 0.10650846740192829), ('client_1', 0.10271116042331224), ('client_9', 0.11015621698836894), ('client_8', 0.09588037602191524), ('client_7', 0.10405237422700393), ('client_5', 0.1022893842017056), ('client_10', 0.09684754735079942)])
+Epoch: 011, Training Time: 23.7133 secs
+Epoch: 011, Validation Time: 1.3922 secs
+-----------------------
+Epoch: 011, Train Loss: 0.5073, Train MSE: 0.4080, Train MAE: 0.4521
+Epoch: 011, Valid Loss: 0.4972, Valid MSE: 0.5915, Valid MAE: 0.5324
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4450, Test MAE: 0.4420, Test low! Updating! Valid Loss: 0.4972, epoch:  11
+aggregation weights dict_items([('client_5', 0.09819442488948346), ('client_1', 0.10058309931969071), ('client_2', 0.10148923676660623), ('client_4', 0.09965583047092764), ('client_10', 0.09370835353922757), ('client_9', 0.09908431280808053), ('client_7', 0.0994834832266345), ('client_8', 0.1004636737663026), ('client_6', 0.10153926318916014), ('client_3', 0.10579832202388663)])
+Epoch: 012, Training Time: 29.0209 secs
+Epoch: 012, Validation Time: 1.5688 secs
+-----------------------
+Epoch: 012, Train Loss: 0.4932, Train MSE: 0.3913, Train MAE: 0.4448
+Epoch: 012, Valid Loss: 0.4916, Valid MSE: 0.5865, Valid MAE: 0.5301
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4414, Test MAE: 0.4402, Test low! Updating! Valid Loss: 0.4916, epoch:  12
+aggregation weights dict_items([('client_10', 0.09634517692042026), ('client_6', 0.09279215833464563), ('client_1', 0.09952663706930727), ('client_3', 0.09510072296903646), ('client_8', 0.10861817540503117), ('client_9', 0.10868838225087796), ('client_4', 0.10674406207704354), ('client_7', 0.09848665145499068), ('client_5', 0.09298077711636453), ('client_2', 0.1007172564022824)])
+Epoch: 013, Training Time: 24.3181 secs
+Epoch: 013, Validation Time: 1.3410 secs
+-----------------------
+Epoch: 013, Train Loss: 0.4874, Train MSE: 0.3944, Train MAE: 0.4437
+Epoch: 013, Valid Loss: 0.4855, Valid MSE: 0.5800, Valid MAE: 0.5267
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4375, Test MAE: 0.4381, Test low! Updating! Valid Loss: 0.4855, epoch:  13
+aggregation weights dict_items([('client_2', 0.09847112827841259), ('client_1', 0.10626019023542096), ('client_8', 0.10030379812531143), ('client_6', 0.09786704386955936), ('client_10', 0.09723420855474829), ('client_9', 0.09828284546388667), ('client_4', 0.11075447766090002), ('client_5', 0.10146142717534344), ('client_3', 0.10469684241497954), ('client_7', 0.08466803822143781)])
+Epoch: 014, Training Time: 26.6608 secs
+Epoch: 014, Validation Time: 1.4667 secs
+-----------------------
+Epoch: 014, Train Loss: 0.4804, Train MSE: 0.3965, Train MAE: 0.4452
+Epoch: 014, Valid Loss: 0.4829, Valid MSE: 0.5764, Valid MAE: 0.5250
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4348, Test MAE: 0.4366, Test low! Updating! Valid Loss: 0.4829, epoch:  14
+aggregation weights dict_items([('client_9', 0.1061304941995613), ('client_1', 0.100310049356624), ('client_5', 0.10623509355008731), ('client_6', 0.09952236001462077), ('client_7', 0.09447063848414838), ('client_3', 0.09671617470582598), ('client_8', 0.10089507849882286), ('client_10', 0.10199255110512857), ('client_2', 0.09535063243048883), ('client_4', 0.09837692765469183)])
+Epoch: 015, Training Time: 26.2846 secs
+Epoch: 015, Validation Time: 1.3946 secs
+-----------------------
+Epoch: 015, Train Loss: 0.4728, Train MSE: 0.3874, Train MAE: 0.4412
+Epoch: 015, Valid Loss: 0.4783, Valid MSE: 0.5724, Valid MAE: 0.5226
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4317, Test MAE: 0.4348, Test low! Updating! Valid Loss: 0.4783, epoch:  15
+aggregation weights dict_items([('client_5', 0.10824890139381949), ('client_10', 0.109165119245549), ('client_7', 0.1037788849345543), ('client_4', 0.0932852750543758), ('client_6', 0.09292050244092043), ('client_8', 0.09338550601257137), ('client_1', 0.10059547622100806), ('client_3', 0.09921731077334847), ('client_9', 0.09853091703083973), ('client_2', 0.10087210689301342)])
+Epoch: 016, Training Time: 26.3845 secs
+Epoch: 016, Validation Time: 1.3701 secs
+-----------------------
+Epoch: 016, Train Loss: 0.4717, Train MSE: 0.3957, Train MAE: 0.4450
+Epoch: 016, Valid Loss: 0.4744, Valid MSE: 0.5676, Valid MAE: 0.5204
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4292, Test MAE: 0.4338, Test low! Updating! Valid Loss: 0.4744, epoch:  16
+aggregation weights dict_items([('client_4', 0.10375137431582344), ('client_2', 0.09587894958553066), ('client_1', 0.09582073186775436), ('client_5', 0.1031931569990256), ('client_6', 0.09951084757873674), ('client_8', 0.10785539554858764), ('client_3', 0.09177200236494325), ('client_7', 0.09652025404436458), ('client_9', 0.10579244075630771), ('client_10', 0.09990484693892605)])
+Epoch: 017, Training Time: 26.9003 secs
+Epoch: 017, Validation Time: 1.4822 secs
+-----------------------
+Epoch: 017, Train Loss: 0.4609, Train MSE: 0.3849, Train MAE: 0.4405
+Epoch: 017, Valid Loss: 0.4713, Valid MSE: 0.5647, Valid MAE: 0.5189
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4271, Test MAE: 0.4328, Test low! Updating! Valid Loss: 0.4713, epoch:  17
+aggregation weights dict_items([('client_5', 0.09223929755818587), ('client_8', 0.11417484357051363), ('client_9', 0.10232851840837283), ('client_7', 0.10669255095618865), ('client_6', 0.10197257448553636), ('client_1', 0.09927473127857056), ('client_10', 0.0989929930068936), ('client_3', 0.09626934101347286), ('client_2', 0.08529091190822527), ('client_4', 0.10276423781404041)])
+Epoch: 018, Training Time: 26.3574 secs
+Epoch: 018, Validation Time: 1.3403 secs
+-----------------------
+Epoch: 018, Train Loss: 0.4591, Train MSE: 0.3944, Train MAE: 0.4416
+Epoch: 018, Valid Loss: 0.4680, Valid MSE: 0.5613, Valid MAE: 0.5171
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4252, Test MAE: 0.4319, Test low! Updating! Valid Loss: 0.4680, epoch:  18
+aggregation weights dict_items([('client_1', 0.11120105779998732), ('client_10', 0.10635971209147455), ('client_2', 0.1119312205495061), ('client_5', 0.10530091111887929), ('client_7', 0.09531184758970852), ('client_3', 0.08824087647073756), ('client_4', 0.09787684724395468), ('client_6', 0.09051192268163381), ('client_8', 0.10412446464735213), ('client_9', 0.08914113980676606)])
+Epoch: 019, Training Time: 28.7358 secs
+Epoch: 019, Validation Time: 1.4764 secs
+-----------------------
+Epoch: 019, Train Loss: 0.4519, Train MSE: 0.3882, Train MAE: 0.4397
+Epoch: 019, Valid Loss: 0.4651, Valid MSE: 0.5603, Valid MAE: 0.5168
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4239, Test MAE: 0.4314, Test low! Updating! Valid Loss: 0.4651, epoch:  19
+aggregation weights dict_items([('client_7', 0.08689720601117), ('client_4', 0.09928419385727658), ('client_8', 0.10071910763089362), ('client_2', 0.10020418301069325), ('client_9', 0.10335602761389727), ('client_5', 0.10749786503809812), ('client_1', 0.10258134032325275), ('client_3', 0.10104084320669866), ('client_10', 0.09841894727092972), ('client_6', 0.10000028603709014)])
+Epoch: 020, Training Time: 27.3595 secs
+Epoch: 020, Validation Time: 1.4700 secs
+-----------------------
+Epoch: 020, Train Loss: 0.4474, Train MSE: 0.3870, Train MAE: 0.4398
+Epoch: 020, Valid Loss: 0.4628, Valid MSE: 0.5582, Valid MAE: 0.5156
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4228, Test MAE: 0.4305, Test low! Updating! Valid Loss: 0.4628, epoch:  20
+aggregation weights dict_items([('client_9', 0.10333262746798434), ('client_1', 0.10424049419211215), ('client_10', 0.10162980003272835), ('client_2', 0.10251519439605654), ('client_3', 0.10591217425446799), ('client_8', 0.10122451093256224), ('client_6', 0.09187470006711868), ('client_4', 0.09683163238762202), ('client_7', 0.10027195940894455), ('client_5', 0.09216690686040327)])
+Epoch: 021, Training Time: 27.8857 secs
+Epoch: 021, Validation Time: 1.4854 secs
+-----------------------
+Epoch: 021, Train Loss: 0.4472, Train MSE: 0.3923, Train MAE: 0.4420
+Epoch: 021, Valid Loss: 0.4584, Valid MSE: 0.5567, Valid MAE: 0.5147
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4218, Test MAE: 0.4300, Test low! Updating! Valid Loss: 0.4584, epoch:  21
+aggregation weights dict_items([('client_8', 0.11460048956621752), ('client_6', 0.09179389130469895), ('client_4', 0.09929913948752639), ('client_1', 0.09713214852180824), ('client_9', 0.10621681153188617), ('client_3', 0.10958616006300233), ('client_5', 0.082529552212166), ('client_10', 0.08956382007591172), ('client_2', 0.10764207345342404), ('client_7', 0.10163591378335865)])
+Epoch: 022, Training Time: 26.8190 secs
+Epoch: 022, Validation Time: 1.4225 secs
+-----------------------
+Epoch: 022, Train Loss: 0.4409, Train MSE: 0.3892, Train MAE: 0.4422
+Epoch: 022, Valid Loss: 0.4577, Valid MSE: 0.5551, Valid MAE: 0.5141
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4209, Test MAE: 0.4297, Test low! Updating! Valid Loss: 0.4577, epoch:  22
+aggregation weights dict_items([('client_10', 0.09682780240548562), ('client_7', 0.09919685945117372), ('client_8', 0.08731167000739792), ('client_3', 0.10387199155175925), ('client_1', 0.09313543638256588), ('client_4', 0.10571988758796504), ('client_5', 0.09087690116462935), ('client_2', 0.11411776865740368), ('client_9', 0.0956601304345965), ('client_6', 0.11328155235702286)])
+Epoch: 023, Training Time: 26.2035 secs
+Epoch: 023, Validation Time: 1.4738 secs
+-----------------------
+Epoch: 023, Train Loss: 0.4385, Train MSE: 0.3895, Train MAE: 0.4403
+Epoch: 023, Valid Loss: 0.4561, Valid MSE: 0.5533, Valid MAE: 0.5133
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4200, Test MAE: 0.4295, Test low! Updating! Valid Loss: 0.4561, epoch:  23
+aggregation weights dict_items([('client_7', 0.10236998809295418), ('client_1', 0.0973929650866674), ('client_10', 0.09289992954096817), ('client_3', 0.10188600890426204), ('client_2', 0.1066625735791765), ('client_5', 0.10156985074162919), ('client_9', 0.10850153833674889), ('client_8', 0.09540498872846416), ('client_6', 0.09408981006812255), ('client_4', 0.09922234692100682)])
+Epoch: 024, Training Time: 26.3254 secs
+Epoch: 024, Validation Time: 1.3979 secs
+-----------------------
+Epoch: 024, Train Loss: 0.4328, Train MSE: 0.3841, Train MAE: 0.4368
+Epoch: 024, Valid Loss: 0.4531, Valid MSE: 0.5520, Valid MAE: 0.5125
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4193, Test MAE: 0.4288, Test low! Updating! Valid Loss: 0.4531, epoch:  24
+aggregation weights dict_items([('client_6', 0.08621891373304766), ('client_1', 0.09575062709477146), ('client_7', 0.09466921141437074), ('client_10', 0.11910590591097243), ('client_3', 0.10502844794548984), ('client_5', 0.10879751669505282), ('client_4', 0.09989837778878942), ('client_9', 0.10494166181827494), ('client_2', 0.09913604326845184), ('client_8', 0.08645329433077883)])
+Epoch: 025, Training Time: 26.6971 secs
+Epoch: 025, Validation Time: 1.4029 secs
+-----------------------
+Epoch: 025, Train Loss: 0.4249, Train MSE: 0.3791, Train MAE: 0.4362
+Epoch: 025, Valid Loss: 0.4502, Valid MSE: 0.5501, Valid MAE: 0.5118
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4185, Test MAE: 0.4287, Test low! Updating! Valid Loss: 0.4502, epoch:  25
+aggregation weights dict_items([('client_6', 0.0971430366466662), ('client_8', 0.09149079698094226), ('client_3', 0.10176906928069984), ('client_7', 0.10390385941697342), ('client_2', 0.11019939080156112), ('client_5', 0.08556444762951064), ('client_4', 0.10750765268888461), ('client_9', 0.09814221102053725), ('client_10', 0.09308285798487885), ('client_1', 0.11119667754934583)])
+Epoch: 026, Training Time: 26.7635 secs
+Epoch: 026, Validation Time: 1.5153 secs
+-----------------------
+Epoch: 026, Train Loss: 0.4259, Train MSE: 0.3888, Train MAE: 0.4410
+Epoch: 026, Valid Loss: 0.4495, Valid MSE: 0.5494, Valid MAE: 0.5114
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4180, Test MAE: 0.4284, Test low! Updating! Valid Loss: 0.4495, epoch:  26
+aggregation weights dict_items([('client_10', 0.10713378547905834), ('client_3', 0.10579313204245698), ('client_2', 0.08750555132358799), ('client_6', 0.10196204103709215), ('client_8', 0.10171561256046541), ('client_4', 0.10683562590311815), ('client_9', 0.10320941870191398), ('client_5', 0.09327826062686133), ('client_1', 0.09563421053684536), ('client_7', 0.09693236178860036)])
+Epoch: 027, Training Time: 26.6352 secs
+Epoch: 027, Validation Time: 1.3503 secs
+-----------------------
+Epoch: 027, Train Loss: 0.4220, Train MSE: 0.3882, Train MAE: 0.4409
+Epoch: 027, Valid Loss: 0.4473, Valid MSE: 0.5484, Valid MAE: 0.5105
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4175, Test MAE: 0.4277, Test low! Updating! Valid Loss: 0.4473, epoch:  27
+aggregation weights dict_items([('client_8', 0.08368772330990346), ('client_9', 0.06740214940764498), ('client_3', 0.11021031202868627), ('client_4', 0.08467800996037926), ('client_10', 0.11123497366952248), ('client_2', 0.10992300293568301), ('client_1', 0.1045627608423128), ('client_6', 0.1085448900519556), ('client_7', 0.11045377759366355), ('client_5', 0.10930240020024862)])
+Epoch: 028, Training Time: 27.0645 secs
+Epoch: 028, Validation Time: 1.4966 secs
+-----------------------
+Epoch: 028, Train Loss: 0.4198, Train MSE: 0.3887, Train MAE: 0.4409
+Epoch: 028, Valid Loss: 0.4458, Valid MSE: 0.5475, Valid MAE: 0.5104
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4167, Test MAE: 0.4276, Test low! Updating! Valid Loss: 0.4458, epoch:  28
+aggregation weights dict_items([('client_10', 0.09811202940525889), ('client_2', 0.09969009758775171), ('client_4', 0.08650868278671874), ('client_3', 0.10555218950065194), ('client_9', 0.11183484302979971), ('client_6', 0.09346238487267979), ('client_1', 0.1064353921168006), ('client_5', 0.11133061561025935), ('client_7', 0.11617848401361357), ('client_8', 0.07089528107646588)])
+Epoch: 029, Training Time: 27.0380 secs
+Epoch: 029, Validation Time: 1.4338 secs
+-----------------------
+Epoch: 029, Train Loss: 0.4125, Train MSE: 0.3798, Train MAE: 0.4372
+Epoch: 029, Valid Loss: 0.4432, Valid MSE: 0.5461, Valid MAE: 0.5098
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4161, Test MAE: 0.4274, Test low! Updating! Valid Loss: 0.4432, epoch:  29
+aggregation weights dict_items([('client_2', 0.10746388052766881), ('client_8', 0.10201670024398234), ('client_10', 0.09216562156923454), ('client_9', 0.10220599877498648), ('client_6', 0.08563298967767222), ('client_5', 0.11527710289829976), ('client_7', 0.08531421801649014), ('client_3', 0.08980700368671277), ('client_1', 0.10277380588678994), ('client_4', 0.11734267871816298)])
+Epoch: 030, Training Time: 24.3967 secs
+Epoch: 030, Validation Time: 5.6635 secs
+-----------------------
+Epoch: 030, Train Loss: 0.4126, Train MSE: 0.3864, Train MAE: 0.4402
+Epoch: 030, Valid Loss: 0.4424, Valid MSE: 0.5449, Valid MAE: 0.5092
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4155, Test MAE: 0.4270, Test low! Updating! Valid Loss: 0.4424, epoch:  30
+aggregation weights dict_items([('client_3', 0.09030782760335217), ('client_4', 0.10049748618241966), ('client_10', 0.09227761000319935), ('client_6', 0.10606923280538472), ('client_5', 0.11192857804945548), ('client_9', 0.0973056759018353), ('client_7', 0.08684288034417122), ('client_8', 0.10300439957741725), ('client_2', 0.10927389852907102), ('client_1', 0.10249241100369394)])
+Epoch: 031, Training Time: 27.2799 secs
+Epoch: 031, Validation Time: 1.3765 secs
+-----------------------
+Epoch: 031, Train Loss: 0.4105, Train MSE: 0.3907, Train MAE: 0.4406
+Epoch: 031, Valid Loss: 0.4403, Valid MSE: 0.5445, Valid MAE: 0.5090
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4155, Test MAE: 0.4269, Test low! Updating! Valid Loss: 0.4403, epoch:  31
+aggregation weights dict_items([('client_8', 0.11276557368841886), ('client_9', 0.11101529200238537), ('client_2', 0.09092216552993032), ('client_3', 0.1101931735900159), ('client_7', 0.09476547563794036), ('client_4', 0.08470273813883014), ('client_1', 0.0942477086968342), ('client_10', 0.10055633517645138), ('client_6', 0.11584887614642345), ('client_5', 0.08498266139276989)])
+Epoch: 032, Training Time: 27.2195 secs
+Epoch: 032, Validation Time: 1.4510 secs
+-----------------------
+Epoch: 032, Train Loss: 0.4071, Train MSE: 0.3863, Train MAE: 0.4404
+Epoch: 032, Valid Loss: 0.4396, Valid MSE: 0.5437, Valid MAE: 0.5086
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4147, Test MAE: 0.4266, Test low! Updating! Valid Loss: 0.4396, epoch:  32
+aggregation weights dict_items([('client_9', 0.09540857198573476), ('client_6', 0.11228426608783736), ('client_10', 0.10102237651813747), ('client_3', 0.0970172053617354), ('client_7', 0.09337786957928354), ('client_8', 0.1056665929735697), ('client_1', 0.10822775302636989), ('client_4', 0.09593168858868142), ('client_5', 0.10165698913076406), ('client_2', 0.08940668674788649)])
+Epoch: 033, Training Time: 27.1589 secs
+Epoch: 033, Validation Time: 1.3698 secs
+-----------------------
+Epoch: 033, Train Loss: 0.4062, Train MSE: 0.3889, Train MAE: 0.4423
+Epoch: 033, Valid Loss: 0.4388, Valid MSE: 0.5421, Valid MAE: 0.5077
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4143, Test MAE: 0.4265, Test low! Updating! Valid Loss: 0.4388, epoch:  33
+aggregation weights dict_items([('client_1', 0.08737016720725041), ('client_4', 0.08604535315782466), ('client_5', 0.09190762544839544), ('client_6', 0.08747521662887683), ('client_8', 0.10786633376689644), ('client_3', 0.10746865480402143), ('client_9', 0.1214899261222581), ('client_7', 0.09044482964484188), ('client_10', 0.10941416672356032), ('client_2', 0.11051772649607443)])
+Epoch: 034, Training Time: 26.6792 secs
+Epoch: 034, Validation Time: 1.3836 secs
+-----------------------
+Epoch: 034, Train Loss: 0.4006, Train MSE: 0.3847, Train MAE: 0.4385
+Epoch: 034, Valid Loss: 0.4356, Valid MSE: 0.5409, Valid MAE: 0.5069
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4138, Test MAE: 0.4262, Test low! Updating! Valid Loss: 0.4356, epoch:  34
+aggregation weights dict_items([('client_9', 0.10420551801357927), ('client_2', 0.09462101352875027), ('client_3', 0.10191063285627572), ('client_10', 0.10003831030760414), ('client_7', 0.10561359910548133), ('client_8', 0.10599376435184038), ('client_6', 0.10081537971693437), ('client_5', 0.08978822874655976), ('client_1', 0.09927275349833391), ('client_4', 0.09774079987464077)])
+Epoch: 035, Training Time: 27.0250 secs
+Epoch: 035, Validation Time: 1.4979 secs
+-----------------------
+Epoch: 035, Train Loss: 0.3992, Train MSE: 0.3883, Train MAE: 0.4407
+Epoch: 035, Valid Loss: 0.4346, Valid MSE: 0.5413, Valid MAE: 0.5073
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4131, Test MAE: 0.4260, Test low! Updating! Valid Loss: 0.4346, epoch:  35
+aggregation weights dict_items([('client_2', 0.104949498490126), ('client_5', 0.10785687600511851), ('client_10', 0.10168541417089114), ('client_8', 0.09701203723640604), ('client_9', 0.09592201672846935), ('client_1', 0.09922742651828732), ('client_3', 0.09819170251299315), ('client_7', 0.1073217257107963), ('client_6', 0.09849571916906848), ('client_4', 0.08933758345784366)])
+Epoch: 036, Training Time: 27.3557 secs
+Epoch: 036, Validation Time: 1.3982 secs
+-----------------------
+Epoch: 036, Train Loss: 0.3967, Train MSE: 0.3887, Train MAE: 0.4406
+Epoch: 036, Valid Loss: 0.4335, Valid MSE: 0.5408, Valid MAE: 0.5070
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4129, Test MAE: 0.4258, Test low! Updating! Valid Loss: 0.4335, epoch:  36
+aggregation weights dict_items([('client_8', 0.09998632338702555), ('client_3', 0.0943884702460873), ('client_5', 0.09755392360594506), ('client_9', 0.11018145713968927), ('client_4', 0.10175010727898777), ('client_7', 0.10490835772695777), ('client_2', 0.10460287930823743), ('client_10', 0.09651043763064804), ('client_6', 0.08653950307314748), ('client_1', 0.10357854060327412)])
+Epoch: 037, Training Time: 27.4506 secs
+Epoch: 037, Validation Time: 1.4179 secs
+-----------------------
+Epoch: 037, Train Loss: 0.3981, Train MSE: 0.3980, Train MAE: 0.4455
+Epoch: 037, Valid Loss: 0.4328, Valid MSE: 0.5404, Valid MAE: 0.5071
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4126, Test MAE: 0.4261, Test low! Updating! Valid Loss: 0.4328, epoch:  37
+aggregation weights dict_items([('client_4', 0.09060004233433146), ('client_2', 0.11418899736843344), ('client_8', 0.1031309325008006), ('client_5', 0.09436453664389327), ('client_7', 0.08397262113590882), ('client_9', 0.09295150861585039), ('client_10', 0.10167336625326397), ('client_3', 0.09770412285767124), ('client_1', 0.11301120069446037), ('client_6', 0.10840267159538651)])
+Epoch: 038, Training Time: 27.1078 secs
+Epoch: 038, Validation Time: 1.4620 secs
+-----------------------
+Epoch: 038, Train Loss: 0.3929, Train MSE: 0.3914, Train MAE: 0.4430
+Epoch: 038, Valid Loss: 0.4314, Valid MSE: 0.5397, Valid MAE: 0.5068
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4124, Test MAE: 0.4259, Test low! Updating! Valid Loss: 0.4314, epoch:  38
+aggregation weights dict_items([('client_7', 0.10867390598801276), ('client_4', 0.09392035455138865), ('client_8', 0.10282426906855631), ('client_3', 0.11972205062469311), ('client_6', 0.09988177887869912), ('client_9', 0.1002208620222507), ('client_10', 0.09824796251269644), ('client_2', 0.09915322404326786), ('client_5', 0.07972998122942093), ('client_1', 0.09762561108101422)])
+Epoch: 039, Training Time: 23.8545 secs
+Epoch: 039, Validation Time: 1.4376 secs
+-----------------------
+Epoch: 039, Train Loss: 0.3902, Train MSE: 0.3896, Train MAE: 0.4421
+Epoch: 039, Valid Loss: 0.4307, Valid MSE: 0.5383, Valid MAE: 0.5060
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_5', 0.09586270386518707), ('client_8', 0.09888711887225668), ('client_3', 0.09843482086576993), ('client_9', 0.10723084630420386), ('client_1', 0.0972738503549152), ('client_2', 0.0933854177426519), ('client_7', 0.10750666717597346), ('client_4', 0.0990021106468018), ('client_6', 0.10270814630875286), ('client_10', 0.09970831786348724)])
+Epoch: 040, Training Time: 31.0904 secs
+Epoch: 040, Validation Time: 1.4486 secs
+-----------------------
+Epoch: 040, Train Loss: 0.3901, Train MSE: 0.3954, Train MAE: 0.4433
+Epoch: 040, Valid Loss: 0.4295, Valid MSE: 0.5370, Valid MAE: 0.5054
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4114, Test MAE: 0.4256, Test low! Updating! Valid Loss: 0.4295, epoch:  40
+aggregation weights dict_items([('client_3', 0.08544435157473154), ('client_4', 0.11287685969645495), ('client_7', 0.11004864142610296), ('client_10', 0.08808677205624206), ('client_2', 0.07181395043365219), ('client_5', 0.08335207547720827), ('client_9', 0.11329589294894794), ('client_1', 0.10711262637790404), ('client_8', 0.10135911563531833), ('client_6', 0.1266097143734377)])
+Epoch: 041, Training Time: 25.7541 secs
+Epoch: 041, Validation Time: 1.3394 secs
+-----------------------
+Epoch: 041, Train Loss: 0.3856, Train MSE: 0.3899, Train MAE: 0.4429
+Epoch: 041, Valid Loss: 0.4288, Valid MSE: 0.5365, Valid MAE: 0.5051
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4108, Test MAE: 0.4250, Test low! Updating! Valid Loss: 0.4288, epoch:  41
+aggregation weights dict_items([('client_5', 0.09625325725094441), ('client_2', 0.08437583724146624), ('client_4', 0.08953010598634031), ('client_6', 0.1048220790281347), ('client_3', 0.11024897930986137), ('client_1', 0.1005429333613405), ('client_7', 0.11323536831720257), ('client_10', 0.10798253570941847), ('client_9', 0.088246671155164), ('client_8', 0.10476223264012745)])
+Epoch: 042, Training Time: 26.8730 secs
+Epoch: 042, Validation Time: 1.4294 secs
+-----------------------
+Epoch: 042, Train Loss: 0.3839, Train MSE: 0.3913, Train MAE: 0.4421
+Epoch: 042, Valid Loss: 0.4276, Valid MSE: 0.5355, Valid MAE: 0.5045
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4108, Test MAE: 0.4253, Test low! Updating! Valid Loss: 0.4276, epoch:  42
+aggregation weights dict_items([('client_4', 0.08687389758339122), ('client_2', 0.1111299923497918), ('client_5', 0.09456059821401783), ('client_7', 0.09127484531337854), ('client_8', 0.09805686904442935), ('client_1', 0.11077431344554955), ('client_6', 0.10179272379232866), ('client_9', 0.09273195521530753), ('client_10', 0.09455200865973906), ('client_3', 0.11825279638206644)])
+Epoch: 043, Training Time: 26.7190 secs
+Epoch: 043, Validation Time: 1.4408 secs
+-----------------------
+Epoch: 043, Train Loss: 0.3790, Train MSE: 0.3832, Train MAE: 0.4396
+Epoch: 043, Valid Loss: 0.4253, Valid MSE: 0.5361, Valid MAE: 0.5049
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4104, Test MAE: 0.4248, Test low! Updating! Valid Loss: 0.4253, epoch:  43
+aggregation weights dict_items([('client_2', 0.09233445814905666), ('client_8', 0.10221382637899545), ('client_3', 0.09633345829321556), ('client_5', 0.10348704701632425), ('client_6', 0.09887686463937201), ('client_9', 0.10216037960263112), ('client_4', 0.1054490527146677), ('client_1', 0.10224802858208225), ('client_10', 0.10370524376248887), ('client_7', 0.09319164086116616)])
+Epoch: 044, Training Time: 27.0933 secs
+Epoch: 044, Validation Time: 1.4284 secs
+-----------------------
+Epoch: 044, Train Loss: 0.3795, Train MSE: 0.3895, Train MAE: 0.4425
+Epoch: 044, Valid Loss: 0.4260, Valid MSE: 0.5348, Valid MAE: 0.5043
+No update
+aggregation weights dict_items([('client_10', 0.10444324277986033), ('client_7', 0.09212092440427423), ('client_5', 0.08939495738965562), ('client_1', 0.09887093934920467), ('client_9', 0.11409883390770487), ('client_6', 0.07514716560145267), ('client_2', 0.10288273356446216), ('client_8', 0.11835157199208042), ('client_3', 0.10699104310921242), ('client_4', 0.09769858790209254)])
+Epoch: 045, Training Time: 26.9739 secs
+Epoch: 045, Validation Time: 1.3355 secs
+-----------------------
+Epoch: 045, Train Loss: 0.3834, Train MSE: 0.4043, Train MAE: 0.4490
+Epoch: 045, Valid Loss: 0.4238, Valid MSE: 0.5339, Valid MAE: 0.5040
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4104, Test MAE: 0.4252, Test low! Updating! Valid Loss: 0.4238, epoch:  45
+aggregation weights dict_items([('client_10', 0.08824159049642841), ('client_3', 0.11351930061178128), ('client_1', 0.09041773596926446), ('client_9', 0.10940881188788087), ('client_4', 0.0910439019469364), ('client_7', 0.11353861081480285), ('client_5', 0.08173882497997985), ('client_8', 0.1022129512335062), ('client_6', 0.10027585749498424), ('client_2', 0.10960241456443538)])
+Epoch: 046, Training Time: 27.0846 secs
+Epoch: 046, Validation Time: 1.3497 secs
+-----------------------
+Epoch: 046, Train Loss: 0.3762, Train MSE: 0.3899, Train MAE: 0.4423
+Epoch: 046, Valid Loss: 0.4229, Valid MSE: 0.5335, Valid MAE: 0.5038
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_7', 0.09366808736236726), ('client_10', 0.0913530579782147), ('client_5', 0.09806395658243829), ('client_8', 0.09876195320987041), ('client_1', 0.1163229271546884), ('client_2', 0.09701260632165334), ('client_3', 0.10893529812965554), ('client_9', 0.10526438566516165), ('client_6', 0.09716796766584242), ('client_4', 0.09344975993010791)])
+Epoch: 047, Training Time: 27.0985 secs
+Epoch: 047, Validation Time: 1.3822 secs
+-----------------------
+Epoch: 047, Train Loss: 0.3760, Train MSE: 0.3942, Train MAE: 0.4453
+Epoch: 047, Valid Loss: 0.4214, Valid MSE: 0.5331, Valid MAE: 0.5034
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4103, Test MAE: 0.4248, Test low! Updating! Valid Loss: 0.4214, epoch:  47
+aggregation weights dict_items([('client_5', 0.09194794340803183), ('client_9', 0.10097253555307979), ('client_6', 0.10127190696416848), ('client_7', 0.11463781527767085), ('client_10', 0.10578334816206628), ('client_4', 0.1030883694929244), ('client_3', 0.09724566697149672), ('client_1', 0.10637467160986662), ('client_2', 0.09863594232873267), ('client_8', 0.0800418002319625)])
+Epoch: 048, Training Time: 26.6465 secs
+Epoch: 048, Validation Time: 1.4257 secs
+-----------------------
+Epoch: 048, Train Loss: 0.3750, Train MSE: 0.3947, Train MAE: 0.4449
+Epoch: 048, Valid Loss: 0.4217, Valid MSE: 0.5324, Valid MAE: 0.5030
+No update
+aggregation weights dict_items([('client_1', 0.10414124778284341), ('client_10', 0.11197865758016069), ('client_7', 0.09578025467348165), ('client_5', 0.10351198282542728), ('client_8', 0.09176133371935168), ('client_3', 0.09331470912741442), ('client_9', 0.10036746629416482), ('client_6', 0.10614196689182964), ('client_4', 0.10423549877475727), ('client_2', 0.0887668823305692)])
+Epoch: 049, Training Time: 24.3243 secs
+Epoch: 049, Validation Time: 1.3871 secs
+-----------------------
+Epoch: 049, Train Loss: 0.3716, Train MSE: 0.3920, Train MAE: 0.4424
+Epoch: 049, Valid Loss: 0.4213, Valid MSE: 0.5321, Valid MAE: 0.5029
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4100, Test MAE: 0.4247, Test low! Updating! Valid Loss: 0.4213, epoch:  49
+aggregation weights dict_items([('client_1', 0.09551440643490611), ('client_10', 0.07282239352469891), ('client_6', 0.09371197082228448), ('client_9', 0.11196215057806039), ('client_3', 0.11048961111050902), ('client_5', 0.09797962427224982), ('client_7', 0.09549305960976989), ('client_4', 0.10569114522465996), ('client_8', 0.11437973917391175), ('client_2', 0.10195589924894972)])
+Epoch: 050, Training Time: 24.0154 secs
+Epoch: 050, Validation Time: 1.3485 secs
+-----------------------
+Epoch: 050, Train Loss: 0.3685, Train MSE: 0.3893, Train MAE: 0.4411
+Epoch: 050, Valid Loss: 0.4203, Valid MSE: 0.5321, Valid MAE: 0.5030
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4094, Test MAE: 0.4246, Test low! Updating! Valid Loss: 0.4203, epoch:  50
+aggregation weights dict_items([('client_7', 0.10268622901644936), ('client_2', 0.08576677952557335), ('client_8', 0.08620116545023147), ('client_10', 0.10814923374109611), ('client_5', 0.104556378097358), ('client_4', 0.09970628923572565), ('client_6', 0.10506221751534223), ('client_9', 0.0933452398348844), ('client_3', 0.1111212911476645), ('client_1', 0.10340517643567484)])
+Epoch: 051, Training Time: 28.4584 secs
+Epoch: 051, Validation Time: 1.4056 secs
+-----------------------
+Epoch: 051, Train Loss: 0.3692, Train MSE: 0.3948, Train MAE: 0.4438
+Epoch: 051, Valid Loss: 0.4207, Valid MSE: 0.5317, Valid MAE: 0.5027
+No update
+aggregation weights dict_items([('client_10', 0.09816705050974811), ('client_8', 0.10626199043789493), ('client_7', 0.11558684287822855), ('client_6', 0.09169849545513753), ('client_9', 0.09020782403335613), ('client_4', 0.09944010484995425), ('client_3', 0.10782660622463075), ('client_2', 0.10660882557177535), ('client_1', 0.09350511421864173), ('client_5', 0.0906971458206327)])
+Epoch: 052, Training Time: 27.1047 secs
+Epoch: 052, Validation Time: 1.4693 secs
+-----------------------
+Epoch: 052, Train Loss: 0.3712, Train MSE: 0.4030, Train MAE: 0.4481
+Epoch: 052, Valid Loss: 0.4201, Valid MSE: 0.5314, Valid MAE: 0.5028
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4089, Test MAE: 0.4245, Test low! Updating! Valid Loss: 0.4201, epoch:  52
+aggregation weights dict_items([('client_3', 0.08982685818026338), ('client_4', 0.10703220645414553), ('client_9', 0.10298554761939543), ('client_6', 0.09938433731056633), ('client_7', 0.10576113610779743), ('client_5', 0.09763165095047932), ('client_8', 0.09559802027506673), ('client_2', 0.09504702982854511), ('client_1', 0.09455546705222917), ('client_10', 0.11217774622151147)])
+Epoch: 053, Training Time: 26.6862 secs
+Epoch: 053, Validation Time: 1.4054 secs
+-----------------------
+Epoch: 053, Train Loss: 0.3682, Train MSE: 0.3994, Train MAE: 0.4468
+Epoch: 053, Valid Loss: 0.4185, Valid MSE: 0.5313, Valid MAE: 0.5027
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_4', 0.10021957448806097), ('client_5', 0.10203816084899968), ('client_6', 0.10692414974453185), ('client_2', 0.10142971699276122), ('client_8', 0.10600046230068157), ('client_9', 0.10571087218292471), ('client_10', 0.09570015389508092), ('client_3', 0.0926917184126718), ('client_1', 0.09677122491511765), ('client_7', 0.09251396621916974)])
+Epoch: 054, Training Time: 27.3152 secs
+Epoch: 054, Validation Time: 1.3884 secs
+-----------------------
+Epoch: 054, Train Loss: 0.3655, Train MSE: 0.3943, Train MAE: 0.4441
+Epoch: 054, Valid Loss: 0.4180, Valid MSE: 0.5309, Valid MAE: 0.5026
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4086, Test MAE: 0.4243, Test low! Updating! Valid Loss: 0.4180, epoch:  54
+aggregation weights dict_items([('client_6', 0.09353122867438102), ('client_4', 0.11075271144705888), ('client_5', 0.09247890251592247), ('client_2', 0.09687728470911754), ('client_10', 0.11199606013154684), ('client_9', 0.07981380630280753), ('client_7', 0.10002328480372723), ('client_1', 0.09973267524574508), ('client_8', 0.1128790405187869), ('client_3', 0.10191500565090646)])
+Epoch: 055, Training Time: 27.5356 secs
+Epoch: 055, Validation Time: 1.3645 secs
+-----------------------
+Epoch: 055, Train Loss: 0.3598, Train MSE: 0.3872, Train MAE: 0.4408
+Epoch: 055, Valid Loss: 0.4174, Valid MSE: 0.5312, Valid MAE: 0.5026
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_3', 0.10191795777998322), ('client_5', 0.09094591518797084), ('client_2', 0.09832305532924912), ('client_6', 0.10343098834263624), ('client_4', 0.08189470643456224), ('client_10', 0.10115876173374527), ('client_7', 0.09605211543065609), ('client_8', 0.11183444423277811), ('client_1', 0.09858857156903582), ('client_9', 0.11585348395938298)])
+Epoch: 056, Training Time: 26.9237 secs
+Epoch: 056, Validation Time: 1.3649 secs
+-----------------------
+Epoch: 056, Train Loss: 0.3630, Train MSE: 0.3952, Train MAE: 0.4445
+Epoch: 056, Valid Loss: 0.4161, Valid MSE: 0.5308, Valid MAE: 0.5025
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4081, Test MAE: 0.4241, Test low! Updating! Valid Loss: 0.4161, epoch:  56
+aggregation weights dict_items([('client_2', 0.10728708864553786), ('client_10', 0.10093302815880469), ('client_9', 0.11604469712022053), ('client_3', 0.09646973083895902), ('client_8', 0.10486909484779429), ('client_6', 0.09271697515637146), ('client_7', 0.10803782706188116), ('client_1', 0.08221120480953498), ('client_5', 0.09591586375611881), ('client_4', 0.09551448960477722)])
+Epoch: 057, Training Time: 26.6297 secs
+Epoch: 057, Validation Time: 1.4298 secs
+-----------------------
+Epoch: 057, Train Loss: 0.3608, Train MSE: 0.3981, Train MAE: 0.4447
+Epoch: 057, Valid Loss: 0.4157, Valid MSE: 0.5305, Valid MAE: 0.5022
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_2', 0.09252781055959629), ('client_5', 0.10271597787378353), ('client_3', 0.0907031054952445), ('client_10', 0.08990096904860716), ('client_6', 0.08562531514910644), ('client_1', 0.12291872396722638), ('client_4', 0.10021224855139252), ('client_8', 0.1100953433077983), ('client_7', 0.08637830271145747), ('client_9', 0.11892220333578746)])
+Epoch: 058, Training Time: 27.0138 secs
+Epoch: 058, Validation Time: 1.4318 secs
+-----------------------
+Epoch: 058, Train Loss: 0.3585, Train MSE: 0.3905, Train MAE: 0.4430
+Epoch: 058, Valid Loss: 0.4154, Valid MSE: 0.5305, Valid MAE: 0.5022
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_10', 0.09531306439507545), ('client_4', 0.09203299987392659), ('client_7', 0.1057500066949801), ('client_9', 0.09090446073857486), ('client_5', 0.08259734882939766), ('client_3', 0.10957410894655037), ('client_6', 0.11125658084054166), ('client_2', 0.09854622269756248), ('client_1', 0.10612108643500001), ('client_8', 0.10790412054839083)])
+Epoch: 059, Training Time: 27.3212 secs
+Epoch: 059, Validation Time: 1.3787 secs
+-----------------------
+Epoch: 059, Train Loss: 0.3592, Train MSE: 0.3923, Train MAE: 0.4438
+Epoch: 059, Valid Loss: 0.4153, Valid MSE: 0.5305, Valid MAE: 0.5022
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_8', 0.0984726686606653), ('client_4', 0.09262450802676206), ('client_1', 0.09205064509892832), ('client_3', 0.09977385057730578), ('client_9', 0.10103546547749755), ('client_7', 0.08705113761889392), ('client_6', 0.10135950675152584), ('client_10', 0.10499157936546247), ('client_5', 0.11557985165701704), ('client_2', 0.10706078676594181)])
+Epoch: 060, Training Time: 27.1761 secs
+Epoch: 060, Validation Time: 1.4286 secs
+-----------------------
+Epoch: 060, Train Loss: 0.3604, Train MSE: 0.4006, Train MAE: 0.4470
+Epoch: 060, Valid Loss: 0.4149, Valid MSE: 0.5297, Valid MAE: 0.5019
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4081, Test MAE: 0.4242, Test low! Updating! Valid Loss: 0.4149, epoch:  60
+aggregation weights dict_items([('client_9', 0.08420234992865391), ('client_8', 0.09196480689039659), ('client_7', 0.08154125310712741), ('client_2', 0.11357642705669244), ('client_10', 0.11077980897044293), ('client_1', 0.10941862061332147), ('client_3', 0.08887870859156649), ('client_6', 0.11134676741417622), ('client_4', 0.10520613035416457), ('client_5', 0.10308512707345804)])
+Epoch: 061, Training Time: 27.1995 secs
+Epoch: 061, Validation Time: 1.3737 secs
+-----------------------
+Epoch: 061, Train Loss: 0.3565, Train MSE: 0.3928, Train MAE: 0.4426
+Epoch: 061, Valid Loss: 0.4137, Valid MSE: 0.5297, Valid MAE: 0.5019
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_10', 0.11311428516413163), ('client_7', 0.09702692734080604), ('client_5', 0.10399769706724316), ('client_3', 0.09591273189320992), ('client_1', 0.08928847289763989), ('client_2', 0.1059299668846257), ('client_4', 0.11264076605200027), ('client_8', 0.08986994240263317), ('client_9', 0.0990160689490616), ('client_6', 0.09320314134864868)])
+Epoch: 062, Training Time: 28.5719 secs
+Epoch: 062, Validation Time: 1.4261 secs
+-----------------------
+Epoch: 062, Train Loss: 0.3583, Train MSE: 0.3990, Train MAE: 0.4463
+Epoch: 062, Valid Loss: 0.4137, Valid MSE: 0.5298, Valid MAE: 0.5019
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_4', 0.09641018269628213), ('client_2', 0.11343499590960845), ('client_1', 0.09792131179611295), ('client_7', 0.10855067462019563), ('client_6', 0.1148159510407925), ('client_8', 0.10110164415151837), ('client_5', 0.08218217905488112), ('client_10', 0.10856515981974126), ('client_3', 0.09317998865565909), ('client_9', 0.08383791225520845)])
+Epoch: 063, Training Time: 27.3313 secs
+Epoch: 063, Validation Time: 1.4421 secs
+-----------------------
+Epoch: 063, Train Loss: 0.3603, Train MSE: 0.4033, Train MAE: 0.4505
+Epoch: 063, Valid Loss: 0.4136, Valid MSE: 0.5300, Valid MAE: 0.5020
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_1', 0.12421299932423974), ('client_8', 0.08536770282661771), ('client_5', 0.09847704934722928), ('client_4', 0.07344507731223143), ('client_9', 0.0980124641962093), ('client_2', 0.0925308886450928), ('client_10', 0.08863959339570887), ('client_6', 0.10159855111048496), ('client_3', 0.11715118962161576), ('client_7', 0.12056448422057009)])
+Epoch: 064, Training Time: 27.3524 secs
+Epoch: 064, Validation Time: 1.3999 secs
+-----------------------
+Epoch: 064, Train Loss: 0.3588, Train MSE: 0.4033, Train MAE: 0.4494
+Epoch: 064, Valid Loss: 0.4135, Valid MSE: 0.5298, Valid MAE: 0.5019
+###Update tasks appear###
+Test low! Updating! Test MSE: 0.4078, Test MAE: 0.4240, Test low! Updating! Valid Loss: 0.4135, epoch:  64
+aggregation weights dict_items([('client_9', 0.10083392163063348), ('client_1', 0.10372661577583107), ('client_3', 0.09938711682414829), ('client_4', 0.10796179185861862), ('client_6', 0.09420631228295079), ('client_10', 0.09909594888740123), ('client_7', 0.11422304374873316), ('client_2', 0.11477576495860597), ('client_8', 0.07229411442674395), ('client_5', 0.09349536960633346)])
+Epoch: 065, Training Time: 27.0864 secs
+Epoch: 065, Validation Time: 1.4014 secs
+-----------------------
+Epoch: 065, Train Loss: 0.3562, Train MSE: 0.3990, Train MAE: 0.4474
+Epoch: 065, Valid Loss: 0.4142, Valid MSE: 0.5299, Valid MAE: 0.5020
+No update
+aggregation weights dict_items([('client_9', 0.10570284081573975), ('client_4', 0.10106383351639467), ('client_3', 0.11119854538124217), ('client_7', 0.08666887238676292), ('client_6', 0.09385583535204486), ('client_10', 0.10519042916659836), ('client_8', 0.09767538927284646), ('client_1', 0.10583798483015991), ('client_2', 0.10180241843045797), ('client_5', 0.09100385084775288)])
+Epoch: 066, Training Time: 26.6915 secs
+Epoch: 066, Validation Time: 1.3375 secs
+-----------------------
+Epoch: 066, Train Loss: 0.3579, Train MSE: 0.4042, Train MAE: 0.4489
+Epoch: 066, Valid Loss: 0.4128, Valid MSE: 0.5300, Valid MAE: 0.5019
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_6', 0.11094642814117919), ('client_3', 0.09229453076688846), ('client_9', 0.10613427302037393), ('client_2', 0.10264368318125727), ('client_10', 0.08906629427310638), ('client_5', 0.09999865782172293), ('client_1', 0.09383678075008657), ('client_4', 0.11382072980810122), ('client_8', 0.09599146732069683), ('client_7', 0.09526715491658724)])
+Epoch: 067, Training Time: 26.7415 secs
+Epoch: 067, Validation Time: 1.3933 secs
+-----------------------
+Epoch: 067, Train Loss: 0.3561, Train MSE: 0.4038, Train MAE: 0.4495
+Epoch: 067, Valid Loss: 0.4135, Valid MSE: 0.5297, Valid MAE: 0.5019
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_7', 0.10343996698880735), ('client_8', 0.10046990408726568), ('client_1', 0.10639562750724392), ('client_5', 0.10467119808085543), ('client_9', 0.08616481033567257), ('client_3', 0.10437337234002136), ('client_2', 0.09202804818323562), ('client_6', 0.11456444560214842), ('client_4', 0.10774742145857107), ('client_10', 0.08014520541617852)])
+Epoch: 068, Training Time: 27.3152 secs
+Epoch: 068, Validation Time: 1.4768 secs
+-----------------------
+Epoch: 068, Train Loss: 0.3582, Train MSE: 0.4077, Train MAE: 0.4513
+Epoch: 068, Valid Loss: 0.4133, Valid MSE: 0.5297, Valid MAE: 0.5018
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_7', 0.10355584723947084), ('client_3', 0.08537430053546764), ('client_4', 0.10055525651752188), ('client_10', 0.09342626230335535), ('client_1', 0.09813207008976245), ('client_9', 0.09602700610823713), ('client_8', 0.09535155219173547), ('client_2', 0.11677112530035813), ('client_6', 0.09625732010089406), ('client_5', 0.11454925961319717)])
+Epoch: 069, Training Time: 27.0078 secs
+Epoch: 069, Validation Time: 1.4599 secs
+-----------------------
+Epoch: 069, Train Loss: 0.3550, Train MSE: 0.4009, Train MAE: 0.4481
+Epoch: 069, Valid Loss: 0.4123, Valid MSE: 0.5296, Valid MAE: 0.5017
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_10', 0.10921646834298185), ('client_5', 0.10029832083246977), ('client_3', 0.0829170650288519), ('client_8', 0.10335115266057657), ('client_4', 0.11391451208216875), ('client_6', 0.09279909390915504), ('client_2', 0.10615871275093434), ('client_7', 0.09636216821775577), ('client_1', 0.08662858904443885), ('client_9', 0.10835391713066707)])
+Epoch: 070, Training Time: 26.8953 secs
+Epoch: 070, Validation Time: 1.3824 secs
+-----------------------
+Epoch: 070, Train Loss: 0.3525, Train MSE: 0.3968, Train MAE: 0.4462
+Epoch: 070, Valid Loss: 0.4135, Valid MSE: 0.5294, Valid MAE: 0.5017
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_8', 0.09393381285720882), ('client_5', 0.10214273936721384), ('client_6', 0.10027371541873725), ('client_7', 0.10949729031662454), ('client_1', 0.10118478753890937), ('client_4', 0.10034614797987067), ('client_9', 0.09459063283416612), ('client_10', 0.08652505917777077), ('client_3', 0.10063423583610569), ('client_2', 0.11087157867339278)])
+Epoch: 071, Training Time: 27.1675 secs
+Epoch: 071, Validation Time: 1.4472 secs
+-----------------------
+Epoch: 071, Train Loss: 0.3577, Train MSE: 0.4102, Train MAE: 0.4522
+Epoch: 071, Valid Loss: 0.4132, Valid MSE: 0.5295, Valid MAE: 0.5019
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_5', 0.09843176127850975), ('client_9', 0.09853017488929697), ('client_7', 0.09109460033484776), ('client_8', 0.09408599911118369), ('client_1', 0.09301571317597396), ('client_10', 0.1233137515948275), ('client_4', 0.09857534482243291), ('client_6', 0.10704087435705656), ('client_3', 0.10378143330454666), ('client_2', 0.09213034713132418)])
+Epoch: 072, Training Time: 26.8608 secs
+Epoch: 072, Validation Time: 1.3997 secs
+-----------------------
+Epoch: 072, Train Loss: 0.3492, Train MSE: 0.3913, Train MAE: 0.4425
+Epoch: 072, Valid Loss: 0.4125, Valid MSE: 0.5296, Valid MAE: 0.5019
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_8', 0.09231244468526661), ('client_3', 0.10114099969890822), ('client_4', 0.12170120246323425), ('client_10', 0.08593935978989993), ('client_1', 0.10066237017540204), ('client_9', 0.09787760612117417), ('client_6', 0.08994388575012739), ('client_2', 0.10361993759686938), ('client_7', 0.10029175094287315), ('client_5', 0.10651044277624477)])
+Epoch: 073, Training Time: 27.5559 secs
+Epoch: 073, Validation Time: 1.3672 secs
+-----------------------
+Epoch: 073, Train Loss: 0.3552, Train MSE: 0.4055, Train MAE: 0.4497
+Epoch: 073, Valid Loss: 0.4132, Valid MSE: 0.5293, Valid MAE: 0.5017
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_8', 0.12139870555127966), ('client_7', 0.08496883979789378), ('client_4', 0.11168596421516494), ('client_5', 0.10262853921063024), ('client_9', 0.08715889402020992), ('client_2', 0.08098880986894004), ('client_1', 0.09029583944149466), ('client_3', 0.10196492889219652), ('client_6', 0.1109378864846281), ('client_10', 0.10797159251756223)])
+Epoch: 074, Training Time: 27.2245 secs
+Epoch: 074, Validation Time: 1.4806 secs
+-----------------------
+Epoch: 074, Train Loss: 0.3507, Train MSE: 0.3955, Train MAE: 0.4460
+Epoch: 074, Valid Loss: 0.4141, Valid MSE: 0.5291, Valid MAE: 0.5015
+No update
+aggregation weights dict_items([('client_6', 0.09721533828833635), ('client_9', 0.08654306836795546), ('client_3', 0.11116837518306878), ('client_8', 0.06497533307865912), ('client_2', 0.09772658864850282), ('client_5', 0.1119804639003832), ('client_4', 0.09801259951376005), ('client_10', 0.09111123468877039), ('client_7', 0.11960055966239848), ('client_1', 0.12166643866816527)])
+Epoch: 075, Training Time: 24.1075 secs
+Epoch: 075, Validation Time: 1.3695 secs
+-----------------------
+Epoch: 075, Train Loss: 0.3504, Train MSE: 0.3947, Train MAE: 0.4450
+Epoch: 075, Valid Loss: 0.4130, Valid MSE: 0.5293, Valid MAE: 0.5016
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_9', 0.0944773600156498), ('client_7', 0.11216724207654258), ('client_10', 0.10541424369582901), ('client_2', 0.09622294770938668), ('client_4', 0.10154586081564512), ('client_8', 0.10655683781842457), ('client_3', 0.08143697729195), ('client_6', 0.09371718477280404), ('client_1', 0.10221994940452415), ('client_5', 0.10624139639924408)])
+Epoch: 076, Training Time: 29.6978 secs
+Epoch: 076, Validation Time: 1.4888 secs
+-----------------------
+Epoch: 076, Train Loss: 0.3533, Train MSE: 0.4028, Train MAE: 0.4495
+Epoch: 076, Valid Loss: 0.4133, Valid MSE: 0.5295, Valid MAE: 0.5018
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_3', 0.11085396671397849), ('client_2', 0.1003609506321623), ('client_4', 0.11486195928125094), ('client_7', 0.09626462074403049), ('client_9', 0.10118268829911907), ('client_8', 0.10480481195564836), ('client_6', 0.0876698979863859), ('client_5', 0.10019873431642783), ('client_10', 0.09397024937958968), ('client_1', 0.08983212069140693)])
+Epoch: 077, Training Time: 24.7685 secs
+Epoch: 077, Validation Time: 1.3700 secs
+-----------------------
+Epoch: 077, Train Loss: 0.3516, Train MSE: 0.3987, Train MAE: 0.4471
+Epoch: 077, Valid Loss: 0.4138, Valid MSE: 0.5295, Valid MAE: 0.5017
+No update
+aggregation weights dict_items([('client_10', 0.10328794789053233), ('client_3', 0.09480032082648293), ('client_6', 0.11283677529770386), ('client_7', 0.1034080714582946), ('client_2', 0.1029841233087369), ('client_4', 0.10687232820955771), ('client_8', 0.08344483035489737), ('client_5', 0.09323877923344527), ('client_9', 0.0983878699628305), ('client_1', 0.10073895345751846)])
+Epoch: 078, Training Time: 28.2720 secs
+Epoch: 078, Validation Time: 1.4619 secs
+-----------------------
+Epoch: 078, Train Loss: 0.3544, Train MSE: 0.4061, Train MAE: 0.4509
+Epoch: 078, Valid Loss: 0.4127, Valid MSE: 0.5294, Valid MAE: 0.5017
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_9', 0.11209979614055247), ('client_2', 0.09535964853705362), ('client_1', 0.10896886737117581), ('client_6', 0.08915391844260205), ('client_7', 0.09291747294011286), ('client_8', 0.09422303510489011), ('client_5', 0.10548420838006084), ('client_4', 0.09183299109447633), ('client_10', 0.1015433089823735), ('client_3', 0.10841675300670242)])
+Epoch: 079, Training Time: 25.6375 secs
+Epoch: 079, Validation Time: 1.4085 secs
+-----------------------
+Epoch: 079, Train Loss: 0.3516, Train MSE: 0.4000, Train MAE: 0.4474
+Epoch: 079, Valid Loss: 0.4121, Valid MSE: 0.5295, Valid MAE: 0.5017
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_3', 0.09961006862422225), ('client_5', 0.1010865683511121), ('client_9', 0.08591575137272651), ('client_7', 0.09381518030994114), ('client_8', 0.113204921860837), ('client_6', 0.09353870739496657), ('client_2', 0.0944841066443871), ('client_10', 0.09512209569804086), ('client_4', 0.10685660903290156), ('client_1', 0.11636599071086495)])
+Epoch: 080, Training Time: 24.0444 secs
+Epoch: 080, Validation Time: 1.3918 secs
+-----------------------
+Epoch: 080, Train Loss: 0.3581, Train MSE: 0.4113, Train MAE: 0.4531
+Epoch: 080, Valid Loss: 0.4126, Valid MSE: 0.5297, Valid MAE: 0.5018
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_3', 0.09577103283833614), ('client_10', 0.11087803547452504), ('client_2', 0.09616886748784917), ('client_1', 0.09723375843179817), ('client_5', 0.09409850869531529), ('client_6', 0.09943521587872313), ('client_8', 0.10864413983673447), ('client_4', 0.09806000746475979), ('client_7', 0.09259372006285828), ('client_9', 0.10711671382910072)])
+Epoch: 081, Training Time: 30.3267 secs
+Epoch: 081, Validation Time: 1.5153 secs
+-----------------------
+Epoch: 081, Train Loss: 0.3528, Train MSE: 0.4006, Train MAE: 0.4482
+Epoch: 081, Valid Loss: 0.4128, Valid MSE: 0.5296, Valid MAE: 0.5018
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_7', 0.10727980071411672), ('client_1', 0.10928446569096678), ('client_9', 0.09244141875626406), ('client_6', 0.10164155168811105), ('client_8', 0.08708241446023235), ('client_10', 0.11064533103174876), ('client_2', 0.11035526728553957), ('client_5', 0.09563023446434318), ('client_3', 0.0979788884244297), ('client_4', 0.08766062748424795)])
+Epoch: 082, Training Time: 24.0299 secs
+Epoch: 082, Validation Time: 1.3900 secs
+-----------------------
+Epoch: 082, Train Loss: 0.3540, Train MSE: 0.4006, Train MAE: 0.4482
+Epoch: 082, Valid Loss: 0.4123, Valid MSE: 0.5296, Valid MAE: 0.5018
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_2', 0.1058507028994188), ('client_9', 0.10591514991163843), ('client_4', 0.10415332950121266), ('client_7', 0.1098812178147671), ('client_8', 0.10020657835079601), ('client_5', 0.09239927445215433), ('client_6', 0.09915969117731352), ('client_3', 0.08512419159351349), ('client_10', 0.09630381729563665), ('client_1', 0.101006047003549)])
+Epoch: 083, Training Time: 24.6561 secs
+Epoch: 083, Validation Time: 1.3374 secs
+-----------------------
+Epoch: 083, Train Loss: 0.3560, Train MSE: 0.4041, Train MAE: 0.4497
+Epoch: 083, Valid Loss: 0.4124, Valid MSE: 0.5297, Valid MAE: 0.5018
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_10', 0.09044778020098716), ('client_2', 0.10215703740155072), ('client_7', 0.10014972595926568), ('client_5', 0.0917265363835608), ('client_3', 0.09617175319069803), ('client_8', 0.1028202045438985), ('client_1', 0.09363214026910259), ('client_9', 0.10653117751349091), ('client_6', 0.11421739456447462), ('client_4', 0.10214624997297092)])
+Epoch: 084, Training Time: 24.4306 secs
+Epoch: 084, Validation Time: 1.3782 secs
+-----------------------
+Epoch: 084, Train Loss: 0.3518, Train MSE: 0.3936, Train MAE: 0.4451
+Epoch: 084, Valid Loss: 0.4135, Valid MSE: 0.5298, Valid MAE: 0.5018
+No update
+aggregation weights dict_items([('client_7', 0.09145159159295332), ('client_3', 0.11992660403139244), ('client_4', 0.09389595709911001), ('client_2', 0.10802150606048998), ('client_10', 0.10520888872992594), ('client_8', 0.10266554694560391), ('client_6', 0.1041819809890379), ('client_9', 0.11072262628327223), ('client_1', 0.08938797702378487), ('client_5', 0.07453732124442942)])
+Epoch: 085, Training Time: 27.7593 secs
+Epoch: 085, Validation Time: 1.4233 secs
+-----------------------
+Epoch: 085, Train Loss: 0.3569, Train MSE: 0.4047, Train MAE: 0.4496
+Epoch: 085, Valid Loss: 0.4132, Valid MSE: 0.5298, Valid MAE: 0.5019
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_5', 0.08578049413312001), ('client_6', 0.11244140837394803), ('client_2', 0.09543691009437257), ('client_10', 0.09157432428897194), ('client_8', 0.09606467565179366), ('client_1', 0.11186124181350944), ('client_4', 0.09169271557315704), ('client_3', 0.1024298904467982), ('client_9', 0.10962036226673097), ('client_7', 0.10309797735759807)])
+Epoch: 086, Training Time: 24.3435 secs
+Epoch: 086, Validation Time: 1.3947 secs
+-----------------------
+Epoch: 086, Train Loss: 0.3567, Train MSE: 0.4040, Train MAE: 0.4497
+Epoch: 086, Valid Loss: 0.4132, Valid MSE: 0.5298, Valid MAE: 0.5019
+###Update tasks appear###
+No update
+aggregation weights dict_items([('client_5', 0.10300670754156234), ('client_8', 0.10407080497932696), ('client_6', 0.09354527450596659), ('client_1', 0.09088641561742972), ('client_7', 0.09999486449940134), ('client_3', 0.11284527143209272), ('client_4', 0.09763112675577874), ('client_10', 0.10173773932393318), ('client_2', 0.09664351312666145), ('client_9', 0.09963828221784712)])
+Epoch: 087, Training Time: 29.5443 secs
+Epoch: 087, Validation Time: 1.4453 secs
+-----------------------
+Epoch: 087, Train Loss: 0.3555, Train MSE: 0.4007, Train MAE: 0.4479
+Epoch: 087, Valid Loss: 0.4142, Valid MSE: 0.5300, Valid MAE: 0.5020
+No update
+aggregation weights dict_items([('client_5', 0.10133996794845962), ('client_8', 0.10069490254620553), ('client_7', 0.11201637685439823), ('client_10', 0.09656630415702623), ('client_4', 0.10122451523033975), ('client_2', 0.09121084664833247), ('client_9', 0.10195368425913476), ('client_6', 0.09027988614395571), ('client_1', 0.09919488783889592), ('client_3', 0.10551862837325195)])
+Epoch: 088, Training Time: 26.0123 secs
+Epoch: 088, Validation Time: 1.5284 secs
+-----------------------
+Epoch: 088, Train Loss: 0.3598, Train MSE: 0.4113, Train MAE: 0.4532
+Epoch: 088, Valid Loss: 0.4146, Valid MSE: 0.5301, Valid MAE: 0.5020
+No update
+aggregation weights dict_items([('client_4', 0.0841449928894078), ('client_9', 0.1082629789090479), ('client_2', 0.09470738426693336), ('client_6', 0.10596730326438943), ('client_1', 0.09757273576623292), ('client_3', 0.09840605453532279), ('client_8', 0.10600130868191478), ('client_5', 0.08668000846823685), ('client_10', 0.1046526886681465), ('client_7', 0.1136045445503676)])
+Epoch: 089, Training Time: 24.1412 secs
+Epoch: 089, Validation Time: 4.3786 secs
+-----------------------
+Epoch: 089, Train Loss: 0.3576, Train MSE: 0.4027, Train MAE: 0.4499
+Epoch: 089, Valid Loss: 0.4149, Valid MSE: 0.5301, Valid MAE: 0.5020
+No update
+aggregation weights dict_items([('client_5', 0.10841851370901776), ('client_3', 0.09923912206435426), ('client_9', 0.08919713017001187), ('client_7', 0.09428994713861232), ('client_6', 0.09624508979439095), ('client_4', 0.11592505818749842), ('client_10', 0.09677004657646583), ('client_2', 0.10504795900656191), ('client_1', 0.10057488430191558), ('client_8', 0.09429224905117112)])
+Epoch: 090, Training Time: 24.5346 secs
+Epoch: 090, Validation Time: 1.3787 secs
+-----------------------
+Epoch: 090, Train Loss: 0.3619, Train MSE: 0.4073, Train MAE: 0.4512
+Epoch: 090, Valid Loss: 0.4153, Valid MSE: 0.5301, Valid MAE: 0.5021
+No update
+aggregation weights dict_items([('client_7', 0.09522175483300209), ('client_6', 0.09385697214681567), ('client_5', 0.10137269494385075), ('client_9', 0.0887359574918975), ('client_1', 0.10461042212904015), ('client_3', 0.09723137118125853), ('client_8', 0.09969047252425005), ('client_4', 0.10415234914338631), ('client_10', 0.11332339773567933), ('client_2', 0.10180460787081948)])
+Epoch: 091, Training Time: 26.7090 secs
+Epoch: 091, Validation Time: 1.4149 secs
+-----------------------
+Epoch: 091, Train Loss: 0.3603, Train MSE: 0.4048, Train MAE: 0.4512
+Epoch: 091, Valid Loss: 0.4156, Valid MSE: 0.5302, Valid MAE: 0.5021
+No update
+aggregation weights dict_items([('client_9', 0.11494873999114658), ('client_8', 0.11577038355936795), ('client_1', 0.0921207988090243), ('client_7', 0.10328190552885072), ('client_4', 0.0753881714337839), ('client_2', 0.10066271291411566), ('client_6', 0.1078542431433075), ('client_3', 0.09432964853796912), ('client_10', 0.09539473716717183), ('client_5', 0.10024865891526248)])
+Epoch: 092, Training Time: 24.3846 secs
+Epoch: 092, Validation Time: 1.4407 secs
+-----------------------
+Epoch: 092, Train Loss: 0.3620, Train MSE: 0.4050, Train MAE: 0.4507
+Epoch: 092, Valid Loss: 0.4161, Valid MSE: 0.5302, Valid MAE: 0.5022
+No update
+aggregation weights dict_items([('client_3', 0.11663941061916491), ('client_4', 0.08338875694280287), ('client_7', 0.08971670496289118), ('client_1', 0.11502578617556945), ('client_10', 0.09804624465018316), ('client_2', 0.08086585283724415), ('client_6', 0.10476390572186496), ('client_9', 0.09674951175832443), ('client_8', 0.11492827001841917), ('client_5', 0.09987555631353565)])
+Epoch: 093, Training Time: 30.4091 secs
+Epoch: 093, Validation Time: 1.5025 secs
+-----------------------
+Epoch: 093, Train Loss: 0.3626, Train MSE: 0.4069, Train MAE: 0.4524
+Epoch: 093, Valid Loss: 0.4163, Valid MSE: 0.5302, Valid MAE: 0.5022
+No update
+aggregation weights dict_items([('client_10', 0.09381926677785149), ('client_3', 0.08997317368247118), ('client_5', 0.09936639111791384), ('client_7', 0.10529922847428509), ('client_2', 0.105791367000462), ('client_8', 0.1078782204033023), ('client_6', 0.0958227606552747), ('client_9', 0.11062377329087263), ('client_1', 0.08592260996763353), ('client_4', 0.1055032086299332)])
+Epoch: 094, Training Time: 24.6580 secs
+Epoch: 094, Validation Time: 1.4288 secs
+-----------------------
+Epoch: 094, Train Loss: 0.3596, Train MSE: 0.3997, Train MAE: 0.4480
+Epoch: 094, Valid Loss: 0.4166, Valid MSE: 0.5302, Valid MAE: 0.5022
+No update
+aggregation weights dict_items([('client_9', 0.10037432300272603), ('client_3', 0.10470851450328715), ('client_10', 0.09764155994362118), ('client_7', 0.08847991844800812), ('client_8', 0.10611975353359353), ('client_2', 0.10013128224667919), ('client_1', 0.10633550395612382), ('client_6', 0.10622078870668872), ('client_4', 0.08790269474547714), ('client_5', 0.10208566091379502)])
+Epoch: 095, Training Time: 26.9865 secs
+Epoch: 095, Validation Time: 1.4528 secs
+-----------------------
+Epoch: 095, Train Loss: 0.3593, Train MSE: 0.3977, Train MAE: 0.4451
+Epoch: 095, Valid Loss: 0.4166, Valid MSE: 0.5302, Valid MAE: 0.5022
+No update
+aggregation weights dict_items([('client_1', 0.09721538341751286), ('client_9', 0.10100544938667373), ('client_3', 0.10482310397955172), ('client_4', 0.09413572178038702), ('client_10', 0.10123574561101752), ('client_8', 0.09992418947597426), ('client_2', 0.10834795161380854), ('client_7', 0.08843004192986591), ('client_5', 0.10288397542597602), ('client_6', 0.10199843737923224)])
+Epoch: 096, Training Time: 26.5315 secs
+Epoch: 096, Validation Time: 1.4257 secs
+-----------------------
+Epoch: 096, Train Loss: 0.3607, Train MSE: 0.3982, Train MAE: 0.4473
+Epoch: 096, Valid Loss: 0.4166, Valid MSE: 0.5302, Valid MAE: 0.5022
+No update
+aggregation weights dict_items([('client_8', 0.10117691484525079), ('client_3', 0.08308144976045376), ('client_5', 0.10090038667903257), ('client_4', 0.10412690028797299), ('client_6', 0.10607703761472033), ('client_2', 0.09865194153514165), ('client_10', 0.10175772112855119), ('client_1', 0.11116085768152856), ('client_9', 0.10244154400217216), ('client_7', 0.09062524646517599)])
+Epoch: 097, Training Time: 23.9998 secs
+Epoch: 097, Validation Time: 4.3726 secs
+-----------------------
+Epoch: 097, Train Loss: 0.3639, Train MSE: 0.4035, Train MAE: 0.4503
+Epoch: 097, Valid Loss: 0.4167, Valid MSE: 0.5302, Valid MAE: 0.5022
+No update
+aggregation weights dict_items([('client_5', 0.11292302283355604), ('client_8', 0.12170461196098241), ('client_9', 0.09927370906364792), ('client_1', 0.10403491558738205), ('client_3', 0.0942806745988141), ('client_10', 0.09887120841685826), ('client_6', 0.09214024881115788), ('client_7', 0.09980430116269719), ('client_2', 0.08559628409287065), ('client_4', 0.09137102347203352)])
+Epoch: 098, Training Time: 24.3958 secs
+Epoch: 098, Validation Time: 1.3912 secs
+-----------------------
+Epoch: 098, Train Loss: 0.3643, Train MSE: 0.4058, Train MAE: 0.4514
+Epoch: 098, Valid Loss: 0.4168, Valid MSE: 0.5302, Valid MAE: 0.5022
+No update
+aggregation weights dict_items([('client_10', 0.09751793105964283), ('client_3', 0.10668363175742268), ('client_9', 0.09316355722293687), ('client_5', 0.10144265333141651), ('client_1', 0.1033703549345441), ('client_4', 0.10234254745860893), ('client_7', 0.10046856616315443), ('client_8', 0.09421538687633699), ('client_6', 0.09074710107966845), ('client_2', 0.11004827011626814)])
+Epoch: 099, Training Time: 27.0211 secs
+Epoch: 099, Validation Time: 1.3795 secs
+-----------------------
+Epoch: 099, Train Loss: 0.3645, Train MSE: 0.4016, Train MAE: 0.4493
+Epoch: 099, Valid Loss: 0.4168, Valid MSE: 0.5302, Valid MAE: 0.5022
+No update
+aggregation weights dict_items([('client_7', 0.09276193082779716), ('client_3', 0.10452908771947396), ('client_9', 0.08779641638297087), ('client_10', 0.10475128535792015), ('client_6', 0.11250552185038223), ('client_5', 0.09756399621615507), ('client_1', 0.09116269286960912), ('client_8', 0.09601757609186326), ('client_4', 0.09816251308878718), ('client_2', 0.11474897959504102)])
+Epoch: 100, Training Time: 27.0954 secs
+Epoch: 100, Validation Time: 1.3594 secs
+-----------------------
+Epoch: 100, Train Loss: 0.3689, Train MSE: 0.4133, Train MAE: 0.4542
+Epoch: 100, Valid Loss: 0.4168, Valid MSE: 0.5302, Valid MAE: 0.5022
+No update
+Average Training Time: 26.5172 secs/epoch
+Average Validation Time: 1.5808 secs
+Training ends
+The epoch of the best result: 64
+The valid loss of the best model 0.4135
+Test time (total): 7.7382 seconds
+On average horizons, Test MSE: 0.4078, Test MAE: 0.4240
+Total time spent: 3515.4749

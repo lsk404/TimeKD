@@ -8,7 +8,7 @@ d_llm=(768)
 learning_rates=(1e-4)
 channels=(48)
 e_layers=(2)
-dropout_ns=(0.2 0.8 1.0)
+dropout_ns=(0.5)
 batch_sizes=(16)
 temperatures=(0.8)
 # model_name="gpt2"
@@ -18,11 +18,11 @@ tokenizer_path="./gpt2_tokenizer"
 root_path="./data/ETT-small"
 # data_paths=("ETTh1" "ETTh2" "ETTm1" "ETTm2")
 data_paths=("ETTh1")
-local_eps=(5)
-local_data_fracs=(0.8)
-fracs=(0.4)
+local_eps=(1)
+local_data_fracs=(1.0)
+fracs=(1.0)
 # data_paths=("exchange_rate")
-epochs=(200)
+epochs=(100)
 commands_file=$(mktemp)
 for seq_len in "${seq_lens[@]}"; do 
   for pred_len in "${pred_lens[@]}"; do
